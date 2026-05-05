@@ -95,6 +95,17 @@ The brand profile is what separates ContentEngine from generic repurposing tools
 
 6.3 Content Input Types
 
+ContentEngine accepts five distinct input types. The UI presents these as selectable cards on the main generation screen. The user selects one, pastes or uploads their content, and the generation pipeline receives both the content and the input type as context.
+
+| Input Type | Description | Accepted Format |
+|---|---|---|
+| LinkedIn Post | An existing LinkedIn post the user has written or wants to repurpose | Plain text paste |
+| YouTube Transcript | Full or partial transcript from a YouTube video | Plain text paste or .txt upload |
+| Blog Article | A full blog post or article | Plain text paste or .md/.txt upload |
+| Topic or Idea | A rough concept, title, or bullet points — no full content yet | Plain text paste |
+| Document Upload | A PDF, DOCX, or Markdown file | File upload (max 10MB) |
+
+All input types route into the same generation pipeline. The input type is passed as context so the AI can calibrate tone, structure, and platform adaptation accordingly. A YouTube transcript generates differently from a LinkedIn post even when targeting the same output platform.
 
 6.4 Text Repurposing Engine
 The core generation pipeline. Produces platform-specific text outputs informed by the coreyhaines31/marketingskills library — specifically the social-content, copywriting, and content-strategy skills.
@@ -220,6 +231,24 @@ Export Formats
 7. Technical Architecture
 7.1 Tech Stack
 
+| Layer | Technology | Rationale |
+|---|---|---|
+| **Framework** | Next.js 15 (App Router) | Server Actions keep API keys server-side by design |
+| **Language** | TypeScript | Type safety across the full stack |
+| **Package Manager** | pnpm | Faster installs, disk-efficient, stricter dependency resolution |
+| **Styling** | Tailwind CSS + shadcn/ui | Maximum speed, zero custom CSS overhead, accessible by default |
+| **Auth** | BetterAuth | Consistent across all Oladipupo Ishola products |
+| **Database** | Neon (PostgreSQL) | Serverless Postgres, generous free tier, native Vercel integration |
+| **ORM** | Drizzle ORM | Type-safe, lightweight, pairs naturally with Neon |
+| **Rate Limiting** | Upstash Redis | Serverless Redis, sliding window, native Vercel integration |
+| **AI** | Anthropic Claude (claude-3-5-sonnet) | Brand extraction + all generation prompts |
+| **File Storage** | Cloudflare R2 | 10GB free, no egress fees — handles brand docs + carousel exports |
+| **Visual Export** | Playwright | Headless browser for carousel PNG and PDF export |
+| **Client State** | Zustand | Lightweight, minimal boilerplate for shared client state |
+| **Server State** | Next.js Server Actions + React cache | No additional library overhead |
+| **Deployment** | Vercel | Zero-config Next.js deployment |
+| **Marketing Skills** | coreyhaines31/marketingskills | Installed via `npx skills add` to `.agents/skills/` |
+
 7.2 Database Schema
 users
 - id, email, password_hash, role (admin | tester | subscriber), created_at, updated_at
@@ -233,6 +262,42 @@ generation_outputs
 - id, generation_id (FK), platform, variations (JSON array of 3), recommended_variation (1|2|3), recommendation_reason, hook_score, alternative_hooks (JSON), seo_data (JSON for YouTube and blog), carousel_url, tiktok_carousel_url, impact_card_url, created_at
 
 7.3 API Route Structure
+
+All data mutations are handled via Next.js Server Actions. There are no public REST API endpoints in V1. Every action is session-gated by BetterAuth middleware before execution.
+
+```
+app/
+  actions/
+    auth/
+      sign-in.ts          → Email/password sign in
+      sign-up.ts          → New account creation
+      sign-out.ts         → Session termination
+      oauth.ts            → Google + GitHub OAuth callbacks
+
+    brand/
+      upload-document.ts  → Accepts PDF/DOCX/MD, validates, stores to R2
+      extract-brand.ts    → Sends document text to Claude, returns structured JSON
+      save-profile.ts     → Persists confirmed brand_profile to Neon
+      update-profile.ts   → Partial updates to existing brand profile
+
+    generate/
+      text.ts             → Text repurposing pipeline (3 variations + recommendation)
+      blog.ts             → Long-form blog post generation (angle selection flow)
+      carousel.ts         → Instagram + LinkedIn carousel HTML generation
+      tiktok-carousel.ts  → TikTok Photo Mode carousel generation
+      impact-card.ts      → Impact card / quote card generation
+      export.ts           → Playwright PNG + PDF export trigger
+
+    history/
+      list.ts             → Paginated list of past generations
+      get.ts              → Single generation with all outputs
+      search.ts           → Keyword search across saved generations
+      delete.ts           → Soft delete a generation record
+
+    settings/
+      save-api-keys.ts    → BYOK: encrypt + store Anthropic key
+      delete-api-keys.ts  → Remove stored keys
+```
 
 7.4 Security Model
 - All API keys stored server-side only — never accessible to the client
@@ -254,6 +319,26 @@ generation_outputs
 - Output direction is explicit. The user consciously chooses to repurpose short, expand long, or both. Not a hidden setting.
 
 8.2 Visual Design Direction
+
+ContentEngine's visual identity is **pure black and white**. The product stands independently from the founder's personal brand. No accent colour is applied globally — the interface earns its authority through precision, space, and typography alone.
+
+Design references: Vercel, Linear, Clerk.
+
+**Core Principles**
+- Dark mode first. Light mode available as a user toggle.
+- Pure black (#000000) and pure white (#FFFFFF) as the only background values. No grey washes, no off-white softening.
+- Neutral shadcn/ui theme as the component foundation — no colour overrides applied globally.
+- One rule for colour in the interface: **user brand colours are only ever shown inside the brand profile section and on carousel/card previews**. The product shell stays monochrome.
+- Typography does the heavy lifting. Sharp, high-contrast. One sans-serif display weight for headings. Clean body type.
+- Borders and dividers are hairline (1px, low opacity) — space is used for hierarchy, not boxes.
+- Motion is subtle. Fade-ins on generation output. No decorative animation.
+- The generation output area is the hero of every screen. Interface chrome recedes. Content leads.
+
+**Component Approach**
+- shadcn/ui neutral palette, dark mode default
+- Tailwind CSS utility classes only — no custom CSS files
+- Consistent 4px spacing grid
+- Cards have no shadow — they float on black with a hairline border
 
 8.3 Core User Flow
 - User logs in. First login triggers onboarding automatically.
@@ -278,8 +363,77 @@ V2 — Commercial Launch
 
 
 10. V1 Build Plan
-Designed for a solo builder working alongside other commitments. Target: 4 to 6 weeks from start to private deployment on Vercel.
+Designed for a solo builder working alongside other commitments. Target: 4 to 6 weeks from start to private deployment on Vercel. Organised by feature phase, not calendar week, to stay flexible around real-life commitments.
 
+**Phase 1 — Project Foundation + Authentication**
+Goal: A running Next.js app where every route is protected from day one. Auth is never retrofitted.
+- Scaffold Next.js 15 with pnpm, TypeScript, Tailwind, shadcn/ui
+- Install and configure BetterAuth (email/password + Google + GitHub OAuth)
+- Implement session middleware — all routes protected by default, no exceptions
+- Sign in, sign up, sign out pages built to final visual design spec
+- User roles defined in schema: admin, tester, subscriber
+- Neon database connected, Drizzle schema initialised with users table
+- Upstash Redis connected, rate limiting middleware wired to all server actions
+- Deploy skeleton to Vercel — production environment established from day one
+- Done when: Founder can log in via Google, all other routes return 401 unauthenticated
+
+**Phase 2 — Brand Profile System**
+Goal: The core intelligence layer. Every generation after this phase is brand-informed.
+- Three-step onboarding flow triggered on first login, cannot be skipped
+- File upload to Cloudflare R2 (PDF, DOCX, MD — validated for type and size)
+- Brand extraction pipeline: document text → Claude system prompt → structured JSON
+- User reviews and confirms extracted brand data before saving
+- brand_profiles table and api_keys table created in Neon
+- Brand profile injected automatically into all downstream generation prompts
+- BYOK key entry, AES-256 encryption, storage in api_keys table
+- Done when: Founder uploads their own brand guide and sees accurate extraction
+
+**Phase 3 — Text Repurposing Engine**
+Goal: The primary value delivery. One input, five platforms, three variations each.
+- Content input UI: five input type cards, paste or upload flow
+- Tone selector: educational, storytelling, promotional, vulnerable, direct
+- Platform selector: X, Instagram caption, TikTok script, YouTube script, LinkedIn post
+- Generation pipeline: brand profile + marketing skills + platform rules → 3 variations
+- AI recommendation with plain English reasoning displayed per platform
+- Hook analysis on every output: strength rating + two alternative hooks
+- Regenerate individual platform output without losing others
+- generations and generation_outputs tables live
+- Done when: Founder pastes a LinkedIn post and receives three platform-ready variations per selected channel with a recommendation
+
+**Phase 4 — Long-Form Blog Output**
+Goal: SEO-optimised long-form content from any input.
+- Two-step flow: three headline and angle options first, then full article for selected angle
+- Full SEO blog structure: title, meta, definition block, H2/H3 body, comparison tables, FAQ
+- Content atom extraction: quotable moment, key stat, controversial take, how-to step
+- YouTube SEO layer: title, description, tags generated alongside YouTube script
+- Done when: Founder generates a full SEO blog post from a YouTube transcript
+
+**Phase 5 — Visual Outputs**
+Goal: Carousel and card generation with export.
+- Instagram carousel: 7-slide narrative arc, 1080x1350px, PNG per slide + compiled PDF
+- LinkedIn PDF carousel: same pipeline, PDF format for LinkedIn native upload
+- TikTok Photo Mode carousel: 9:16, 1080x1920px, 3–5 slides, bold minimal design
+- Impact card: single-slide quote card, three background style options, brand customisation
+- Playwright export pipeline: HTML template → headless browser → PNG/PDF → R2 storage
+- Done when: Founder generates and exports a complete Instagram carousel to PNG files
+
+**Phase 6 — Content History and Library**
+Goal: Nothing is ever lost.
+- History view: date, input type, input preview, platforms generated
+- Open any past generation and see all outputs including all three variations
+- Re-edit any saved output, regenerate with updated brand profile or tone
+- Keyword search across all saved generations
+- Done when: Founder can find and reuse a generation from two weeks ago
+
+**Phase 7 — Polish and Private Deployment**
+Goal: Production-ready, zero rough edges, deployed.
+- Mobile responsive audit across all screens
+- Usage dashboard for founder: total generations, platform breakdown, API cost estimate
+- End-to-end testing of full generation flow
+- Security audit of all server actions and R2 signed URLs
+- Final Vercel production deployment with environment variables confirmed
+- Onboard first three testers
+- Done when: Three testers have signed up with BYOK and generated content
 
 
 11. Success Metrics
@@ -298,6 +452,17 @@ V2 Metrics (Pre-launch Targets)
 - Average Anthropic API cost per user per month is at least 40 percent below subscription price after accounting for three variations per generation
 
 12. Risks and Mitigations
+
+| Risk | Likelihood | Impact | Mitigation |
+|---|---|---|---|
+| **Claude API cost overrun** — 3 variations per platform per generation is token-heavy | Medium | High | BYOK in V1 means testers absorb their own costs. Monitor founder usage. Gate variation count in V2 prompts. |
+| **Playwright export fails on Vercel** — serverless functions have limits for headless browsers | Medium | High | Decision gate at Phase 5: test Playwright on Vercel early. Fallback: use Browserless.io hosted service (has a free tier). |
+| **Brand extraction inaccuracy** — Claude misreads poorly structured brand guides | Medium | Medium | Mandatory user review step before saving. User can edit any field. Generic voice fallback if upload is skipped. |
+| **Cloudflare R2 integration complexity** — unfamiliar SDK for file uploads | Low | Medium | Use official `@aws-sdk/client-s3` with R2 endpoint — R2 is S3-compatible. Well-documented pattern. |
+| **Claude response latency** — 3 variations takes longer than a single generation | High | Medium | Stream generation output per platform. Show skeleton loaders. Display outputs as they arrive, not all at once. |
+| **Scope creep into V2 features** — video generation, calendar, analytics are tempting | High | High | Defer list is explicit in the PRD. Any V2 feature request goes to a backlog document, not the codebase. |
+| **Security gap in BYOK key storage** — AES-256 implementation error | Low | Critical | Use a battle-tested Node.js crypto implementation. Add `/security-audit` review before first tester onboarding. |
+| **Single brand profile per user becomes a constraint** — power users want multiple brands | Low | Low | Explicitly deferred to V2. Communicate this to testers upfront. |
 
 13. Open Questions
 - What is the final product name? Working title ContentEngine used until decided.
