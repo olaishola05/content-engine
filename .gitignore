@@ -1,0 +1,16 @@
+# AI toolkit symlinks (managed globally via ~/.config/agents_skills)
+agents
+hooks
+skills
+slash-commands
+
+# Logs
+logs/
+*.log
+
+# OS
+.DS_Store
+
+# Editor
+.vscode/
+.idea/
