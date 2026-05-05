@@ -23,8 +23,8 @@ Nothing is ever lost. Every piece of text, every blog post, and every visual ass
 
 ## Architecture Decisions
 
-- **Drizzle queries**: Use relational queries for the history listing to fetch `generations` + their associated `generation_outputs` efficiently.
-- **Search**: For V1, use a simple `ilike` SQL query in Drizzle. Do not add Postgres full-text search (tsvector) or an external service like Algolia unless performance dictates it.
+- **Prisma queries**: Use `include` to fetch `generations` + their associated `generationOutputs` efficiently in a single query.
+- **Search**: For V1, use a simple `contains` SQL query in Prisma. Do not add Postgres full-text search (tsvector) or an external service like Algolia unless performance dictates it.
 - **Regeneration**: When a user clicks regenerate, it does NOT mutate the old record. It creates a completely new `generations` record using the same input.
 
 ---

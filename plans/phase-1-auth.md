@@ -20,8 +20,8 @@ A deployed Next.js 15 app on Vercel where every route is locked behind BetterAut
 - [ ] Sign up page (`/sign-up`) — email/password only (OAuth auto-creates account)
 - [ ] Sign out action wired to user menu
 - [ ] User roles defined in schema: `admin | tester | subscriber`
-- [ ] Neon PostgreSQL connected via Drizzle ORM
-- [ ] `users` table schema live in Neon
+- [ ] Neon PostgreSQL connected via Prisma (`@prisma/adapter-neon`)
+- [ ] `User` model schema live in Neon
 - [ ] Upstash Redis connected and rate limiting middleware wired to all server actions
 - [ ] App deployed to Vercel with production environment variables set
 - [ ] Founder can log in via Google and reach the (empty) dashboard
@@ -33,7 +33,7 @@ A deployed Next.js 15 app on Vercel where every route is locked behind BetterAut
 
 - **No public routes** except `/sign-in` and `/sign-up`. Middleware catches everything else.
 - **BetterAuth** handles session via secure HTTP-only cookies. No JWT stored in localStorage.
-- **Drizzle ORM** for all DB interactions — type-safe, lightweight, no magic.
+- **Prisma ORM** for all DB interactions — using `@prisma/adapter-neon` to avoid Vercel connection limits.
 - **Upstash Redis** rate limiting applied as middleware at the Server Action level, not the UI level.
 - **shadcn/ui neutral** — no colour customisation yet. Ship the skeleton in pure black/white.
 
@@ -53,11 +53,12 @@ app/
 
 lib/
   auth.ts                     ← BetterAuth config (providers, callbacks)
-  db/
-    schema.ts                 ← Drizzle schema: users table
-    index.ts                  ← Neon connection
+  prisma.ts                   ← Prisma client instantiation
   redis.ts                    ← Upstash Redis client
   rate-limit.ts               ← Sliding window middleware helper
+  
+prisma/
+  schema.prisma               ← Prisma schema: User table
 
 actions/
   auth/

@@ -239,7 +239,7 @@ Export Formats
 | **Styling** | Tailwind CSS + shadcn/ui | Maximum speed, zero custom CSS overhead, accessible by default |
 | **Auth** | BetterAuth | Consistent across all Oladipupo Ishola products |
 | **Database** | Neon (PostgreSQL) | Serverless Postgres, generous free tier, native Vercel integration |
-| **ORM** | Drizzle ORM | Type-safe, lightweight, pairs naturally with Neon |
+| **ORM** | Prisma | Developer familiarity, best-in-class schema readability, uses `@prisma/adapter-neon` |
 | **Rate Limiting** | Upstash Redis | Serverless Redis, sliding window, native Vercel integration |
 | **AI** | Anthropic Claude (claude-3-5-sonnet) | Brand extraction + all generation prompts |
 | **File Storage** | Cloudflare R2 | 10GB free, no egress fees — handles brand docs + carousel exports |
@@ -372,7 +372,7 @@ Goal: A running Next.js app where every route is protected from day one. Auth is
 - Implement session middleware — all routes protected by default, no exceptions
 - Sign in, sign up, sign out pages built to final visual design spec
 - User roles defined in schema: admin, tester, subscriber
-- Neon database connected, Drizzle schema initialised with users table
+- Neon database connected, Prisma schema initialised with users table
 - Upstash Redis connected, rate limiting middleware wired to all server actions
 - Deploy skeleton to Vercel — production environment established from day one
 - Done when: Founder can log in via Google, all other routes return 401 unauthenticated

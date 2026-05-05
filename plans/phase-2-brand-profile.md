@@ -19,7 +19,7 @@ The intelligence layer. Every generation from Phase 3 onward is automatically in
 - [ ] Brand profile page in settings shows a formatted summary of extracted brand details
 - [ ] User can update any field of their brand profile from settings at any time
 - [ ] Brand profile is loaded and injected into every generation server action automatically
-- [ ] `brand_profiles` and `api_keys` tables live in Neon via Drizzle schema
+- [ ] `BrandProfile` and `ApiKey` models live in Neon via Prisma schema
 
 ---
 
@@ -54,9 +54,10 @@ app/
     settings/
       brand-profile/page.tsx        ← View + edit brand profile
 
+prisma/
+  schema.prisma                     ← ADD: BrandProfile, ApiKey models
+
 lib/
-  db/
-    schema.ts                       ← ADD: brand_profiles, api_keys tables
   prompts/
     brand-extraction.ts             ← System prompt constant
   extractors/
@@ -104,7 +105,7 @@ ANTHROPIC_API_KEY=                  # Founder's own key (server env var)
 
 ## Dependencies
 
-- Phase 1 complete (auth + Neon + Drizzle setup)
+- Phase 1 complete (auth + Neon + Prisma setup)
 
 ---
 
