@@ -20,8 +20,9 @@ A deployed Next.js 15 app on Vercel where every route is locked behind BetterAut
 - [ ] Sign up page (`/sign-up`) — email/password only (OAuth auto-creates account)
 - [ ] Sign out action wired to user menu
 - [ ] User roles defined in schema: `admin | tester | subscriber`
-- [ ] Neon PostgreSQL connected via Prisma (`@prisma/adapter-neon`)
-- [ ] `User` model schema live in Neon
+- [ ] Local PostgreSQL database connected via Prisma for development
+- [ ] `User` model schema live in local DB
+- [ ] Zod schema validation applied to all auth forms and server actions
 - [ ] Upstash Redis connected and rate limiting middleware wired to all server actions
 - [ ] App deployed to Vercel with production environment variables set
 - [ ] Founder can log in via Google and reach the (empty) dashboard
@@ -33,7 +34,8 @@ A deployed Next.js 15 app on Vercel where every route is locked behind BetterAut
 
 - **No public routes** except `/sign-in` and `/sign-up`. Middleware catches everything else.
 - **BetterAuth** handles session via secure HTTP-only cookies. No JWT stored in localStorage.
-- **Prisma ORM** for all DB interactions — using `@prisma/adapter-neon` to avoid Vercel connection limits.
+- **Prisma ORM** for DB interactions. Connects to local PostgreSQL during development. Uses `@prisma/adapter-neon` only in production/Vercel.
+- **Zod + React Hook Form** for end-to-end validation. Schemas defined once, used on both client (UI) and server (Actions).
 - **Upstash Redis** rate limiting applied as middleware at the Server Action level, not the UI level.
 - **shadcn/ui neutral** — no colour customisation yet. Ship the skeleton in pure black/white.
 
@@ -62,6 +64,7 @@ prisma/
 
 actions/
   auth/
+    validations.ts            ← Zod schemas for auth (SignInSchema, SignUpSchema)
     sign-in.ts
     sign-up.ts
     sign-out.ts
