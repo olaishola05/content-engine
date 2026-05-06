@@ -15,8 +15,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ContentEngine",
-  description: "AI-Powered Content Repurposing",
+  title: "ContentEngine — AI-Powered Content Repurposing",
+  description:
+    "One input. Full content pack. Your voice. Every platform. ContentEngine repurposes your content for X, LinkedIn, Instagram, TikTok, YouTube, and blog — in your brand voice.",
 };
 
 export default function RootLayout({

@@ -3,6 +3,10 @@ import { PrismaNeon } from '@prisma/adapter-neon';
 import { PrismaClient } from '@prisma/client';
 import ws from 'ws';
 
+// Import standard pg for local development
+import { Pool as PgPool } from 'pg';
+import { PrismaPg } from '@prisma/adapter-pg';
+
 // Required for neon serverless in local environments
 neonConfig.webSocketConstructor = ws;
 
@@ -22,9 +26,11 @@ if (process.env.NODE_ENV === 'production') {
   const connectionString = process.env.DATABASE_URL || '';
   
   if (connectionString.includes('localhost') || connectionString.includes('127.0.0.1')) {
-    // Local PostgreSQL instance - bypass the Neon adapter
+    // Local PostgreSQL instance - explicitly use standard pg adapter
     if (!globalForPrisma.prisma) {
-      globalForPrisma.prisma = new PrismaClient();
+      const pool = new PgPool({ connectionString });
+      const adapter = new PrismaPg(pool);
+      globalForPrisma.prisma = new PrismaClient({ adapter });
     }
     prisma = globalForPrisma.prisma;
   } else {

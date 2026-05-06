@@ -78,7 +78,7 @@ export default async function DashboardPage() {
           {/* Sidebar / Progress */}
           <div className="vercel-card p-6 space-y-6">
             <h3 className="text-ui">Onboarding Progress</h3>
-            
+
             <div className="space-y-4">
               {[
                 { label: "Authentication", status: "complete" },
@@ -87,18 +87,16 @@ export default async function DashboardPage() {
                 { label: "Visual Assets", status: "pending" },
               ].map((step, i) => (
                 <div key={step.label} className="flex items-center gap-3">
-                  <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] ${
-                    step.status === "complete" ? "bg-[#171717] text-white" :
-                    step.status === "current" ? "bg-white text-[#171717] shadow-[0_0_0_2px_#171717]" :
-                    "bg-[#fafafa] text-[#888888] shadow-[0_0_0_1px_#ebebeb]"
-                  }`}>
+                  <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] ${step.status === "complete" ? "bg-[#171717] text-white" :
+                      step.status === "current" ? "bg-white text-[#171717] shadow-[0_0_0_2px_#171717]" :
+                        "bg-[#fafafa] text-[#888888] shadow-[0_0_0_1px_#ebebeb]"
+                    }`}>
                     {step.status === "complete" ? "✓" : i + 1}
                   </div>
-                  <span className={`text-sm ${
-                    step.status === "complete" ? "text-[#171717] line-through opacity-50" :
-                    step.status === "current" ? "text-[#171717] font-medium" :
-                    "text-[#888888]"
-                  }`}>
+                  <span className={`text-sm ${step.status === "complete" ? "text-[#171717] line-through opacity-50" :
+                      step.status === "current" ? "text-[#171717] font-medium" :
+                        "text-[#888888]"
+                    }`}>
                     {step.label}
                   </span>
                 </div>
