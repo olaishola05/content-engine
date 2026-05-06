@@ -1,0 +1,552 @@
+# ContentEngine — Product Requirements Document v2.0
+
+**AI-Powered Content Repurposing Platform**
+
+| | |
+|---|---|
+| **Author** | Oladipupo Ishola |
+| **Version** | v2.0 — May 2026 |
+| **Status** | Final — Ready for Development |
+
+---
+
+## 1. Executive Summary
+
+ContentEngine is an AI-powered content repurposing and generation platform. It takes a single piece of content and produces a complete content pack: platform-optimised text, long-form blog posts, visual carousels, impact cards, and video-ready scripts. Every output is informed by the user's stored brand profile, so the system does not just repurpose content — it repurposes it in the user's voice, for their audience, optimised for each platform's performance norms.
+
+The product launches as a private internal tool for the founder, opens to invited testers on BYOK access, then goes fully commercial with a flat monthly subscription. This staged approach validates the product in real use before money changes hands.
+
+> **Strategic Context:** ContentEngine is built first. The audience built around it becomes the customer base for future products including Brand System Builder. Every piece of content produced with it is proof of what it does. The tool markets itself through use.
+
+---
+
+## 2. Problem Statement
+
+Content creators who want to build a serious presence across multiple platforms face three compounding problems.
+
+**Problem 1: The manual repurposing tax.**
+The same idea gets touched five or six times across platforms. Most creators skip repurposing entirely or produce lower quality outputs because of the effort involved.
+
+**Problem 2: Generic AI output that sounds like AI.**
+Without brand voice context, AI-generated content is tonally wrong. The creator rewrites it anyway, defeating the purpose.
+
+**Problem 3: No performance intelligence built in.**
+Even repurposed content fails to perform when hooks are weak, captions miss platform conventions, and YouTube titles are not searchable. The tool produces content but not results.
+
+---
+
+## 3. Product Vision
+
+ContentEngine is the tool that makes one piece of content go everywhere, sound like you, and perform well when it gets there.
+
+> **One Input. Full Content Pack. Your Voice. Every Platform.**
+> The user creates once. ContentEngine generates text, visuals, cards, and scripts — all branded, all optimised, all ready to post.
+
+---
+
+## 4. Target Users
+
+ContentEngine is built for any serious content creator regardless of technical background. The UI must work equally well for a developer who appreciates clean tooling and a faith-based YouTube creator who has never written a line of code.
+
+| User Type | Description |
+|---|---|
+| Solo content creators | Building a personal brand. Creating content regularly but struggling with distribution and repurposing volume. |
+| Founders and solopreneurs | Non-technical. Need to show up online consistently to attract clients. Cannot afford a content team. |
+| Educators and coaches | Have deep knowledge to share. Strong on their primary platform but not showing up elsewhere because repurposing is too time-consuming. |
+| Developers and builders | Building in public. Want to repurpose technical content across platforms without manual effort. |
+| Niche and faith channel creators | Running topic-specific channels. Need content that stays on-brand and on-message without generic AI output diluting their voice. |
+
+---
+
+## 5. Scope
+
+The product is built in two clearly defined versions. V1 is the private internal tool. V2 is the commercial product.
+
+### Version 1 — Private Tool (Target: 4 to 6 Weeks)
+
+**INCLUDED IN V1**
+
+- User authentication via BetterAuth with OAuth (Google, GitHub) and email and password
+- Brand profile creation via document upload — PDF, DOCX, or Markdown (.md)
+- Automatic brand detail extraction stored structured in user profile on Neon
+- Five content input types: LinkedIn post, YouTube transcript, blog article, topic or idea, document upload
+- Text repurposing to X, Instagram caption, TikTok script, YouTube script
+- Three variations per platform output with AI-powered recommendation and reasoning
+- Long-form output: SEO blog post and article generation optimised for traditional search and AI search engines
+- Hook scoring and alternative hook suggestions per platform
+- YouTube SEO layer: title, description, and tags generated alongside script
+- Instagram carousel generation — 4:5 ratio, 7-slide narrative arc, exported as PNG and PDF
+- LinkedIn PDF carousel export from the same carousel generation pipeline
+- TikTok Photo Mode carousel — 9:16 vertical ratio, 3 to 5 slides, bold minimal design
+- Impact Card / Quote Card generation with subtle brand customisation
+- Tone selector per generation independent of brand profile default
+- Regenerate individual platform outputs without losing others
+- Content history and library — all generations saved and searchable
+- BYOK mode for invited testers — API keys stored encrypted per user
+- Rate limiting on all API routes via Upstash Redis
+- Mobile responsive UI
+- Marketing skills integration from coreyhaines31/marketingskills library
+- Simple usage dashboard for the founder
+
+**DEFERRED TO V2**
+
+- Remotion animated video generation
+- WaveSpeed AI video generation
+- Content calendar and planning view
+- Stripe subscription and billing
+- Multi-user commercial access
+- Auto-posting and scheduling integration
+- Analytics per piece of content
+- Team accounts and multiple brand profiles
+
+---
+
+## 6. Feature Specifications
+
+### 6.1 Authentication and Access Control
+
+Auth is built from day one using BetterAuth. There are no unprotected routes. Every page and every API endpoint requires a valid session. Users can authenticate via OAuth providers or email and password — both supported from day one.
+
+- Sign up and sign in with email and password via BetterAuth
+- OAuth sign in via Google and GitHub — primary and recommended authentication method
+- Users can choose either OAuth or email and password. OAuth is presented as the default option on the login screen for fastest onboarding.
+- Session management with secure HTTP-only cookies
+- User roles: Admin (founder), Tester (BYOK required), Subscriber (V2)
+- All API calls routed through Next.js server actions — keys never exposed to the client
+- Rate limiting per user per endpoint using Upstash Redis sliding window
+- BYOK mode: testers enter their own Anthropic and WaveSpeed keys on first login, stored encrypted in Neon using AES-256
+
+---
+
+### 6.2 Brand Profile System
+
+The brand profile is what separates ContentEngine from generic repurposing tools. Every generation is automatically informed by it without the user having to think about it.
+
+- On first login, three-step onboarding triggers automatically and cannot be skipped
+  - Step 1: Upload brand guide in any supported format — PDF, DOCX, or Markdown (.md). Max 10MB. Skip option applies a generic voice.
+  - Step 2: Claude reads the document and extracts structured brand data. User reviews and confirms or edits before saving.
+  - Step 3: BYOK users add their API keys. Platform subscribers skip this step. OAuth users skip account setup entirely — profile is pre-populated from their provider.
+- Extracted brand data stored as structured JSON in brand_profile field on user record in Neon
+- Extracted fields: brand name, tone of voice, key phrases, avoid phrases, audience description, content pillars, platform handles, niche, CTA style, brand values, unique positioning, primary colour, font
+- Brand profile injected automatically into every generation system prompt
+- User can update brand profile at any time from settings
+- User can view a formatted summary of extracted brand details in their profile page
+
+---
+
+### 6.3 Content Input Types
+
+| Input Type | How It Is Processed |
+|---|---|
+| LinkedIn post | Pasted as plain text. Core message and structure extracted. |
+| YouTube transcript or summary | Key insights, quotes, and story arc extracted before repurposing. |
+| Blog article | Pasted as plain text. Main argument, subpoints, and CTA extracted. |
+| Topic or idea | Treated as a brief. Claude generates content from scratch for each output type, informed by brand profile. |
+| Document upload | PDF, DOCX, or Markdown uploaded. Claude mines it for content angles — PRDs, research, course outlines, sermon notes, Obsidian exports, Notion exports. |
+
+---
+
+### 6.4 Text Repurposing Engine
+
+The core generation pipeline. Produces platform-specific text outputs informed by the coreyhaines31/marketingskills library — specifically the social-content, copywriting, and content-strategy skills.
+
+#### THREE VARIATIONS PER PLATFORM WITH RECOMMENDATION
+
+Every text output is generated as three distinct variations. Each variation takes a different angle, hook style, or tone approach. The system analyses all three and recommends one with a plain English explanation of why.
+
+- Variation 1: Curiosity or open-loop angle — creates a knowledge gap the audience wants to close
+- Variation 2: Bold claim or direct statement — leads with the outcome or result
+- Variation 3: Personal story or experience angle — leads with a relatable human moment
+
+The recommendation is based on three factors: brand profile fit (which variation sounds most like the user), platform performance principle (which hook formula performs strongest on that platform per the social-content skill), and content type match (educational content gets different treatment from personal story content).
+
+> **Recommendation Format:** Plain English, 2 to 3 sentences. Example: "Variation 2 is recommended. It opens with a specific outcome rather than a question, which performs stronger on X. It also matches your direct, no-fluff tone better than the other two." Never a score or percentage.
+
+#### PLATFORM RULES BAKED INTO EVERY GENERATION
+
+| Platform | Generation Rules |
+|---|---|
+| X (Twitter) | Single tweet max 280 characters OR numbered thread if depth requires. Strong opening line. Max 2 hashtags. Hook must create curiosity or make a bold claim without being clickbait. |
+| Instagram Caption | First line works as standalone hook before the "more" cut. Storytelling body. Clear CTA. 8 to 12 relevant hashtags grouped at the bottom. |
+| TikTok Script | Hook in first 3 seconds creates an open loop. Spoken conversational language. 45 to 90 seconds when read aloud. Stage directions in brackets. Strong CTA at the end. |
+| YouTube Script | Strong opening hook. Structured with clear sections. B-roll suggestions in brackets. Conversational but authoritative. SEO title, description, and 6 tags generated alongside. |
+
+#### PERFORMANCE LAYER
+
+- Hook analysis on every output: why the hook is strong or weak
+- Two alternative hook options per platform
+- Regenerate any single platform output independently without losing others
+- Tone selector per generation: educational, storytelling, promotional, vulnerable, direct
+
+---
+
+### 6.5 Long-Form Output: Blog Post and Article Generation
+
+Any input type can be expanded into a full SEO-optimised blog post. This is a distinct output direction from short-form repurposing. The user chooses to repurpose short, expand long, or generate both simultaneously.
+
+> **Dual SEO Optimisation:** Every blog post is optimised for traditional search engines (Google, Bing) AND AI search engines (Google AI Overviews, ChatGPT, Perplexity, Claude). Appearing in AI-generated answers is as important as ranking on page one in 2026. ContentEngine builds for both from day one.
+
+#### Blog Post Structure — Every Generated Article Includes
+
+- SEO title with primary keyword front-loaded, under 60 characters
+- Meta description under 160 characters with primary keyword and clear value proposition
+- Estimated read time
+- Definition block in the first paragraph: a self-contained answer to the primary query in 40 to 60 words, optimised for AI snippet extraction
+- Structured body with H2 and H3 headings that mirror how people phrase search queries
+- At least one comparison table, numbered list, or step-by-step block for structured content AI search engines cite
+- Statistics and cited sources woven into the body — each statistic increases AI citation probability by up to 37 percent
+- Internal linking suggestions noted in brackets for where the user should link to related content
+- Primary keyword and three to five secondary keywords identified
+- CTA at the end aligned with the user's brand profile
+- FAQ section with natural-language questions and direct answers — optimised for featured snippet and AI Overview citation
+
+#### Three Angle Variations for Blog Posts
+
+Blog posts and articles use a two-step variation flow to avoid generating three full long-form articles unnecessarily.
+
+- Step 1: System generates three headline and angle options with a brief description of each direction and a recommendation
+- Step 2: User selects their preferred angle and the full article is generated for that angle only
+
+This protects token usage and keeps the experience fast without sacrificing creative choice.
+
+#### Content Atom Extraction
+
+When a blog post is generated, ContentEngine also extracts content atoms — self-contained moments from the article that work as standalone social posts.
+
+- Quotable moment: a bold claim or memorable line for X or LinkedIn
+- Key statistic: a surprising number formatted as a social proof post
+- Controversial take: a contrarian angle for X or LinkedIn
+- Step extracted from a how-to section: suitable for TikTok or Instagram carousel
+
+---
+
+### 6.6 Marketing Skills Integration
+
+ContentEngine's generation prompts are systematically informed by the coreyhaines31/marketingskills open-source library. This ensures every output follows proven marketing methodology rather than generic AI writing patterns.
+
+| Skill | Applied In ContentEngine |
+|---|---|
+| social-content | Hook formulas for every platform. Three-second rule for TikTok and Reels. Platform specs and character counts. Content atom extraction framework. |
+| ai-seo | Blog post dual optimisation for traditional and AI search. 40 to 60 word extractable passage target. Statistics and citation weaving. FAQ block structure. |
+| seo-audit | On-page SEO rules for blog post generation. Title tag, meta description, heading hierarchy, and keyword placement methodology. |
+| copywriting | Headline formulas for LinkedIn hooks and Impact Cards. CTA writing rules. Benefit-over-feature principle. Specificity over vagueness rule across all outputs. |
+| content-strategy | Searchable versus shareable classification. Content pillar and topic cluster mapping used in brand profile extraction. Buyer stage mapping for blog keyword targeting. |
+| launch-strategy | ORB framework for launch announcement content. Five-phase launch approach templates available as a content mode. |
+
+Installation into the ContentEngine codebase:
+
+```bash
+npx skills add coreyhaines31/marketingskills
+```
+
+Skills install to `.agents/skills/` directory. The AI coding agent reads relevant skill files before building each generation prompt.
+
+---
+
+### 6.7 Visual Output: Instagram Carousel
+
+Produces a fully swipeable HTML carousel where every slide is designed for export as an individual PNG for Instagram, or compiled as a PDF for LinkedIn.
+
+- Content derived from the same input used for text repurposing
+- Brand profile informs tone, messaging, and CTA. Colour system derived from brand primary colour.
+- Standard 7-slide narrative arc: Hero, Problem, Solution, Features, Details, How-to, CTA
+- Arc adapts to content topic — not every carousel needs all seven slides
+- Every slide includes progress bar and swipe arrow per the carousel design system
+- Instagram export: individual 1080x1350px PNG files per slide
+- LinkedIn export: single compiled PDF with all slides as pages — LinkedIn PDF carousel format which is currently one of the highest-performing content types on the platform
+- Playwright used for export at correct device scale factor (420px layout, 2.57x scale to 1080px output)
+
+---
+
+### 6.8 Visual Output: TikTok Photo Mode Carousel
+
+A distinct carousel format built for TikTok's Photo Mode and Instagram Reels multi-image posts. Different dimensions, different design energy, and different pacing from the Instagram carousel.
+
+> **Why This Is Different:** Instagram carousel: editorial, information-dense, 7 slides, narrative arc. TikTok Photo Mode: punchy, minimal text per slide, high contrast, 3 to 5 slides maximum, designed to be consumed fast on a phone in portrait mode. Same source content, completely different treatment.
+
+- Format: 9:16 vertical ratio at 1080x1920px
+- 3 to 5 slides maximum — hook on slide one, value in the middle, payoff or CTA on the last slide
+- Bold typography, high contrast, minimal text per slide — designed for fast thumb-scroll consumption
+- Each slide carries one idea, one statement, or one step — no information density
+- Exported as individual PNG files ready for TikTok Photo Mode upload
+- Same Playwright pipeline as Instagram carousel — different HTML template and dimensions
+
+---
+
+### 6.9 Visual Output: Impact Card / Quote Card
+
+A single-slide branded image built around the most powerful statement extracted from the content. Performs exceptionally well on faith channels, motivational accounts, and any niche where a bold declaration drives saves and shares.
+
+#### Generation Logic
+
+- System extracts the single most impactful statement from the content — the line most likely to stop a scroll
+- User can regenerate with a different extracted statement if the first does not land
+- Three background style options: solid white with heavy black type, solid black with white type, brand gradient with white type
+- User sets their preferred default style in brand profile — applied automatically to every Impact Card generated
+
+#### Brand Customisation
+
+Subtle but deliberate. The message is always the hero. The branding claims ownership without fighting the content for attention.
+
+- Brand handle or name displayed small at the bottom — e.g. @olaishola in 11px muted text. Enough to claim it, not enough to distract.
+- Logo mark or brand initial in the corner at low opacity (10 to 15 percent) if stored in brand profile
+- Thin accent bar — 4px along the bottom or left edge in brand primary colour. A single line of colour that makes the card distinctly theirs across a feed.
+- Optional background tint: brand primary colour at 4 to 8 percent opacity on white or black base. Barely visible but consistently theirs.
+- All customisation values pulled automatically from stored brand profile. Set once, applied everywhere. No manual customisation per card.
+
+#### Export Formats
+
+- 1080x1080px PNG for Instagram feed and Facebook
+- 1080x1920px PNG for TikTok and Instagram Reels
+
+---
+
+### 6.10 Content History and Library
+
+- All generations stored in Neon database linked to the user account
+- History view shows date, input type, input preview, and platforms generated
+- User can open any past generation and see all outputs including all three variations
+- User can re-edit any saved output
+- User can regenerate any past session with updated brand profile or tone
+- Search by keyword across all saved generations
+
+---
+
+### 6.11 Onboarding Flow
+
+- Step 1: Upload brand guide — PDF, DOCX, or Markdown. Skip option available.
+- Step 2: Review extracted brand details. Edit any field before confirming.
+- Step 3: Add API keys if BYOK mode. Platform subscribers skip this.
+- After onboarding, user lands on main generation dashboard ready to create.
+
+---
+
+## 7. Technical Architecture
+
+### 7.1 Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Framework | Next.js 14 with TypeScript and App Router |
+| Styling | Tailwind CSS and Shadcn UI |
+| Authentication | BetterAuth with OAuth (Google, GitHub) and email and password. OAuth is the primary method. Email and password available as fallback. |
+| Database ORM | Prisma |
+| Database | Neon — serverless PostgreSQL |
+| File Storage | Vercel Blob — brand documents, exported PNGs, PDFs |
+| Email | Resend |
+| Rate Limiting | Upstash Redis |
+| AI — Text Generation | Anthropic Claude API (claude-sonnet-4-20250514) |
+| AI — Image and Video (V2) | WaveSpeed API |
+| Animated Video (V2) | Remotion |
+| Visual Export | Playwright — carousel PNG and PDF export, Impact Card PNG export |
+| Hosting | Vercel |
+| Analytics | PostHog |
+| Marketing Skills | coreyhaines31/marketingskills via npx skills add |
+
+---
+
+### 7.2 Database Schema
+
+**users**
+- id, email, password_hash, role (admin | tester | subscriber), created_at, updated_at
+
+**brand_profiles**
+- id, user_id (FK), raw_document_url, extracted_data (JSON), primary_color, tone, niche, audience, handles (JSON), impact_card_style, created_at, updated_at
+
+**api_keys**
+- id, user_id (FK), anthropic_key_encrypted, wavespeed_key_encrypted, created_at
+
+**generations**
+- id, user_id (FK), input_type, input_content, tone_used, platforms (JSON array), output_direction (short | long | both), created_at
+
+**generation_outputs**
+- id, generation_id (FK), platform, variations (JSON array of 3), recommended_variation (1|2|3), recommendation_reason, hook_score, alternative_hooks (JSON), seo_data (JSON for YouTube and blog), carousel_url, tiktok_carousel_url, impact_card_url, created_at
+
+---
+
+### 7.3 API Route Structure
+
+| Route | Function |
+|---|---|
+| POST /api/brand/extract | Receives uploaded document, sends to Claude for extraction, returns structured brand data |
+| POST /api/brand/save | Saves confirmed brand profile to Neon |
+| POST /api/generate/text | Main repurposing endpoint. Returns 3 variations per platform with recommendation and hook analysis. |
+| POST /api/generate/blog | Returns 3 angle options for blog post. On angle selection, generates full article with dual SEO layer and content atoms. |
+| POST /api/generate/carousel | Generates Instagram carousel HTML from content and brand profile |
+| POST /api/generate/tiktok-carousel | Generates TikTok Photo Mode carousel HTML — 9:16 format |
+| POST /api/generate/impact-card | Generates Impact Card HTML with brand customisation applied |
+| POST /api/export/carousel/png | Playwright export — individual PNGs per slide at 1080x1350px |
+| POST /api/export/carousel/pdf | Playwright export — compiled PDF for LinkedIn upload |
+| POST /api/export/tiktok-carousel | Playwright export — individual PNGs at 1080x1920px |
+| POST /api/export/impact-card | Playwright export — PNG at 1080x1080px and 1080x1920px |
+| GET /api/generations | Paginated generation history for authenticated user |
+| GET /api/generations/:id | Single generation with all outputs and all variations |
+| PUT /api/generations/:id | Updates a saved generation output |
+
+---
+
+### 7.4 Security Model
+
+- All API keys stored server-side only — never accessible to the client
+- BYOK keys encrypted with AES-256 before storage in Neon
+- Every API route protected by BetterAuth session validation middleware
+- Rate limiting per user per route using Upstash Redis sliding window
+- Default limits: 10 text generations per hour, 5 exports per hour, 20 requests per minute per route
+- Document uploads validated for file type (PDF, DOCX, MD only) and size (max 10MB) before processing
+- All user data scoped to their account — no cross-user data access possible
+
+---
+
+## 8. User Experience
+
+### 8.1 Key UX Principles
+
+- Approachable first. Works for a non-technical faith channel creator and a developer equally. No jargon in labels or instructions.
+- Mobile responsive. Every screen works on a phone. The user should generate content from their phone after a class.
+- Three variations, one decision. Showing three options with a clear recommendation removes choice paralysis. The user decides in seconds.
+- Nothing is lost. Every generation saved automatically including all three variations.
+- Brand voice is invisible. The user does not think about applying their brand voice. It just happens.
+- Output direction is explicit. The user consciously chooses to repurpose short, expand long, or both. Not a hidden setting.
+
+---
+
+### 8.2 Visual Design Direction
+
+| Element | Decision |
+|---|---|
+| Default theme | Light mode default with full dark mode support |
+| Primary accent | Electric indigo #6366F1 — energetic, creative, distinct from founder personal brand |
+| Base | Soft off-white #F8F9FF backgrounds, dark navy #0F172A for text |
+| Typography | DM Sans — warm, approachable, sharp. Works for technical and non-technical users equally. |
+| Corner radius | Generous. Rounded corners throughout. Friendly not clinical. |
+| Three variations display | Tabbed or card layout per platform. Recommended variation highlighted by default. User clicks between them freely. |
+| Naming | Working title: ContentEngine. Final name TBD before V2 commercial launch. |
+
+---
+
+### 8.3 Core User Flow
+
+1. User logs in. First login triggers onboarding automatically.
+2. User selects output direction: Repurpose Short, Expand Long, or Both.
+3. User selects input type and pastes or uploads their content.
+4. User selects tone for this generation if different from brand profile default.
+5. User selects which platforms and output types they want.
+6. User hits Generate. Outputs stream in per platform.
+7. Each platform shows three variations with the recommended one highlighted. Two to three sentence recommendation explains the choice.
+8. User picks their preferred variation, edits if needed, copies or downloads.
+9. All outputs including all three variations saved to history automatically.
+
+---
+
+## 9. Pricing Model
+
+### V1 — Private and Tester Phase
+
+- Founder (admin): uses own API keys stored in server environment variables
+- Testers: BYOK mode. Must provide their own Anthropic API key. Zero cost to founder.
+- No payment infrastructure in V1
+
+### V2 — Commercial Launch
+
+| Plan | Details |
+|---|---|
+| Starter | Flat monthly fee. Unlimited text repurposing (all platforms, 3 variations). Blog post generation. Instagram carousel and LinkedIn PDF export. Impact Card generation. Single brand profile. |
+| Creator | Higher monthly fee. Everything in Starter. TikTok Photo Mode carousel. Higher monthly video allowance when V2 video features launch. Multiple brand profiles. |
+| BYOK Option | Available on any plan. User provides their own API keys. Reduced monthly fee. |
+
+> **Pricing Note:** Three variations per generation increases token usage roughly threefold versus single output. This must be factored into COGS per user per month when setting V2 price points. Pricing set only after V1 usage data reveals real average cost per active user.
+
+---
+
+## 10. V1 Build Plan
+
+Designed for a solo builder working alongside other commitments. Target: 4 to 6 weeks from start to private deployment on Vercel.
+
+| Week | Focus | Deliverable |
+|---|---|---|
+| Week 1 | Foundation | Next.js project scaffolded. BetterAuth configured and tested. Neon connected. Prisma schema migrated. Vercel deployment live on private URL. |
+| Week 2 | Brand Profile System | Document upload working (PDF, DOCX, MD). Claude extraction pipeline built using brand extraction system prompt. Brand profile saved to database. Onboarding flow complete. |
+| Week 3 | Text Generation | Main generation pipeline live. All four platform outputs working. Three variations per platform with recommendation. Hook scoring. YouTube SEO layer. History saved automatically. |
+| Week 4 | Visual Outputs | Instagram carousel generation and PNG export. LinkedIn PDF export. TikTok Photo Mode carousel. Impact Card with brand customisation. All Playwright exports working. Download buttons functional. |
+| Week 5 | Blog and Polish | Blog post generation with dual SEO layer. Content atom extraction. Mobile responsive audit. Regenerate individual outputs. Tone selector. Content history and search. |
+| Week 6 | Security and Testing | Rate limiting on all routes. BYOK mode for testers. Usage dashboard. Founder uses tool daily. Invited testers onboarded. Feedback collected for V2 scope. |
+
+---
+
+## 11. Success Metrics
+
+### V1 Metrics
+
+- Founder generates and posts content using the tool at least 4 times per week
+- Content generated covers all five platforms consistently
+- Time from input to ready-to-post output is under 3 minutes
+- No API key exposure incidents
+- At least 3 testers onboarded and actively using the tool by end of week 6
+- Founder is using the three variations feature and the recommended option lands correctly at least 70 percent of the time — tracked informally through usage patterns
+
+### V2 Metrics (Pre-launch Targets)
+
+- 10 paying subscribers within 30 days of commercial launch
+- Average session generates content for at least 3 platforms
+- Monthly churn below 10 percent
+- Average Anthropic API cost per user per month is at least 40 percent below subscription price after accounting for three variations per generation
+
+---
+
+## 12. Risks and Mitigations
+
+| Risk | Mitigation |
+|---|---|
+| Three variations triples API cost | V1 BYOK mode means zero API cost during validation. Pricing set only after real V1 usage data. If cost is too high, variations can be gated to Creator plan in V2. |
+| Scope creep delays V1 launch | Video generation, scheduling, and analytics are explicitly deferred to V2. V1 scope is locked. |
+| Generated content does not sound like the user | Brand profile extraction validated by user before saving. Tone selector per generation. Recommendation logic explains reasoning so user learns what works. |
+| Playwright export is unreliable in Vercel environment | Export tested thoroughly in week 4. Vercel has known constraints with Playwright — may need to run export as a separate serverless function or use a hosted browser service. Decision made in week 4. |
+| Three variations creates choice paralysis | Recommended variation highlighted by default. User can copy the recommended one in one click without reviewing the others. The choice is available but never forced. |
+| Product name not finalised | Working title ContentEngine used throughout development. Name finalised before V2 commercial launch. Does not block building. |
+
+---
+
+## 13. Open Questions
+
+- What is the final product name? Working title ContentEngine used until decided.
+- What are the exact V2 subscription price points? Determined after V1 usage data.
+- Should carousel export run server-side on Vercel or via a hosted browser service? Decision needed before Week 4 build.
+- Does V1 support multiple brand profiles per user? Current answer: no. Single profile per user in V1.
+- Should the three variations feature be available on all plans in V2, or gated to Creator? Decision based on API cost data from V1.
+- What is the video generation allowance per plan in V2? Requires WaveSpeed cost analysis per model before decision.
+
+---
+
+## 14. System Prompts Reference
+
+Ready-to-use system prompts for the AI coding agent building the generation pipeline.
+
+### Brand Extraction System Prompt
+
+Store as a constant in `lib/prompts/brand-extraction.ts`. The document text goes in the user message. This prompt goes in the system field.
+
+```
+You are a brand intelligence extraction system. Read the document and extract structured brand information. Return ONLY a valid JSON object with these fields: brand_name, tagline, niche, audience, tone_of_voice, content_pillars (array), key_phrases (array), avoid_phrases (array), platform_handles (object with linkedin/instagram/x/tiktok/youtube), cta_style, brand_values (array), unique_positioning, primary_color, font. If a field cannot be found, return null. Never invent information not in the document. Return only raw JSON. No preamble. No markdown fences.
+```
+
+---
+
+## 15. Appendix
+
+### Reference Products Studied
+
+- **Blotato (blotato.com)** — content creation and repurposing platform. Reference for pricing model, credit system, and multi-platform publishing approach.
+- **WaveSpeed AI (wavespeed.ai)** — unified AI media generation platform with 1000+ models via single API key. Selected as V2 video and image generation provider.
+- **Linear, Raycast, Clerk** — referenced for clean, approachable-but-sharp design direction.
+
+### Key Technical and Skill References
+
+- **coreyhaines31/marketingskills** — open-source marketing skills library. Install: `npx skills add coreyhaines31/marketingskills`. Skills used: social-content, ai-seo, seo-audit, copywriting, content-strategy, launch-strategy.
+- **Instagram Carousel Design System** — established carousel skill with Playwright export pipeline. Integrated directly into ContentEngine carousel output feature.
+- **BetterAuth** — authentication library used across all Oladipupo Ishola products for stack consistency.
+- **Upstash Redis** — rate limiting implementation.
+- **Remotion** — programmatic video generation library. Deferred to V2.
+
+---
+
+*ContentEngine PRD v2.0 — Oladipupo Ishola — May 2026 — Confidential*
