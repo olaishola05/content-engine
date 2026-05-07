@@ -34,11 +34,10 @@ export async function signUpAction(formData: FormData) {
       },
       headers: await headers(),
     });
-
-    return redirect("/dashboard");
   } catch (error) {
-    return { error: error instanceof Error ? error.message : "Failed to create account" };
+    return { error: (error as Error).message || "Failed to create account" };
   }
+  return redirect("/dashboard");
 }
 
 export async function signInAction(formData: FormData) {
@@ -67,11 +66,10 @@ export async function signInAction(formData: FormData) {
       },
       headers: await headers(),
     });
-
-    return redirect("/dashboard");
   } catch (error) {
-    return { error: error instanceof Error ? error.message : "Invalid email or password" };
+    return { error: (error as Error).message || "Invalid email or password" };
   }
+  return redirect("/dashboard");
 }
 
 export async function signOutAction() {

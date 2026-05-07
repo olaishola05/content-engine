@@ -88,14 +88,14 @@ export default async function DashboardPage() {
               ].map((step, i) => (
                 <div key={step.label} className="flex items-center gap-3">
                   <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] ${step.status === "complete" ? "bg-[#171717] text-white" :
-                      step.status === "current" ? "bg-white text-[#171717] shadow-[0_0_0_2px_#171717]" :
-                        "bg-[#fafafa] text-[#888888] shadow-[0_0_0_1px_#ebebeb]"
+                    step.status === "current" ? "bg-white text-[#171717] shadow-[0_0_0_2px_#171717]" :
+                      "bg-[#fafafa] text-[#888888] shadow-[0_0_0_1px_#ebebeb]"
                     }`}>
                     {step.status === "complete" ? "✓" : i + 1}
                   </div>
                   <span className={`text-sm ${step.status === "complete" ? "text-[#171717] line-through opacity-50" :
-                      step.status === "current" ? "text-[#171717] font-medium" :
-                        "text-[#888888]"
+                    step.status === "current" ? "text-[#171717] font-medium" :
+                      "text-[#888888]"
                     }`}>
                     {step.label}
                   </span>
