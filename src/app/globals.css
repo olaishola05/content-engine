@@ -1,0 +1,190 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* ─────────────────────────────────────────
+   Vercel Design System
+   Reference: resources/design/vercel.md
+   Palette: Achromatic, White default
+   Typeface: Geist Sans
+───────────────────────────────────────── */
+
+@theme inline {
+  /* Typeface */
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+
+  /* shadcn semantic color mappings (Vercel Light Default) */
+  --color-background:            #ffffff;
+  --color-foreground:            #171717;
+  
+  --color-card:                  #ffffff;
+  --color-card-foreground:       #171717;
+  
+  --color-popover:               #ffffff;
+  --color-popover-foreground:    #171717;
+  
+  /* Primary Action */
+  --color-primary:               #171717;
+  --color-primary-foreground:    #ffffff;
+  
+  --color-secondary:             #fafafa;
+  --color-secondary-foreground:  #171717;
+  
+  --color-muted:                 #fafafa;
+  --color-muted-foreground:      #4d4d4d;
+  
+  --color-accent:                #fafafa;
+  --color-accent-foreground:     #171717;
+  
+  --color-destructive:           #e00;
+  
+  /* Structure - Using solid equivalents for borders where shadow isn't possible */
+  --color-border:                #ebebeb;
+  --color-input:                 #ebebeb;
+  --color-ring:                  hsla(212, 100%, 48%, 1);
+
+  /* Radius scale (Vercel specific) */
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-full: 9999px;
+  
+  /* Shadows (Vercel specific) */
+  --shadow-ring: 0px 0px 0px 1px rgba(0,0,0,0.08);
+  --shadow-ring-light: 0px 0px 0px 1px rgb(235,235,235);
+  --shadow-card-subtle: 0px 0px 0px 1px rgba(0,0,0,0.08), 0px 2px 2px rgba(0,0,0,0.04);
+  --shadow-card-full: 0px 0px 0px 1px rgba(0,0,0,0.08), 0px 2px 2px rgba(0,0,0,0.04), 0px 8px 8px -8px rgba(0,0,0,0.04), inset 0px 0px 0px 1px #fafafa;
+}
+
+/* ─────────────────────────────────────────
+   Tokens
+───────────────────────────────────────── */
+:root {
+  color-scheme: light;
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+.dark {
+  color-scheme: dark;
+  --background: #000000;
+  --foreground: #ededed;
+  
+  /* Inverted specific tokens for dark mode if needed */
+  --color-primary: #ededed;
+  --color-primary-foreground: #000;
+  --color-border: #333;
+  --color-input: #333;
+  --color-muted-foreground: #a1a1aa;
+}
+
+/* ─────────────────────────────────────────
+   Base
+───────────────────────────────────────── */
+@layer base {
+  *, *::before, *::after {
+    box-sizing: border-box;
+    border-color: var(--color-border);
+  }
+
+  html {
+    font-family: var(--font-sans), system-ui, sans-serif;
+    /* Liga is structural in Geist */
+    font-feature-settings: "liga" 1, "calt" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    min-height: 100dvh;
+    line-height: 1.5;
+  }
+
+  /* Vercel Typography Scale */
+  h1, .text-display { 
+    font-size: 3rem; /* 48px */
+    font-weight: 600; 
+    letter-spacing: -2.4px; 
+    line-height: 1; 
+  }
+  h2, .text-title-1 { 
+    font-size: 2rem; /* 32px */
+    font-weight: 600; 
+    letter-spacing: -1.28px;  
+    line-height: 1.2; 
+  }
+  h3, .text-title-2 { 
+    font-size: 1.5rem; /* 24px */
+    font-weight: 600; 
+    letter-spacing: -0.96px; 
+    line-height: 1.3;
+  }
+  .text-subtitle {
+    font-size: 1.25rem; /* 20px */
+    font-weight: 400;
+    line-height: 1.8;
+  }
+  p { 
+    font-size: 1rem; /* 16px */
+    font-weight: 400;
+    line-height: 1.6; 
+  }
+  
+  /* Focus accessibility */
+  :focus-visible {
+    outline: 2px solid hsla(212, 100%, 48%, 1);
+    outline-offset: 2px;
+  }
+
+  button { cursor: pointer; }
+}
+
+/* ─────────────────────────────────────────
+   Utilities (Vercel Specific)
+───────────────────────────────────────── */
+@layer utilities {
+  /* Cards */
+  .vercel-card {
+    background-color: #ffffff;
+    border-radius: var(--radius-lg); /* 8px */
+    box-shadow: var(--shadow-ring);
+  }
+  
+  .vercel-card-elevated {
+    background-color: #ffffff;
+    border-radius: var(--radius-lg); /* 8px */
+    box-shadow: var(--shadow-card-full);
+  }
+
+  /* Text hierarchy */
+  .text-ui {
+    font-size: 0.875rem; /* 14px */
+    font-weight: 500;
+    color: #171717;
+  }
+  
+  .text-label {
+    font-size: 0.875rem; /* 14px */
+    font-weight: 400;
+    color: #4d4d4d;
+  }
+
+  /* Button overrides to ensure 6px radius */
+  .btn-vercel-primary {
+    @apply h-10 px-4 bg-[#171717] text-white hover:bg-[#383838] font-medium text-sm transition-colors;
+    border-radius: var(--radius-md); /* 6px */
+  }
+  
+  .btn-vercel-outline {
+    @apply h-10 px-4 bg-white text-[#171717] font-medium text-sm transition-colors hover:bg-gray-50;
+    border-radius: var(--radius-md); /* 6px */
+    box-shadow: var(--shadow-ring);
+  }
+}

@@ -1,10 +1,12 @@
+# ContentEngine — Product Requirements Document v2.0
 
-PRODUCT REQUIREMENTS DOCUMENT
-[Working Title: ContentEngine]
-AI-Powered Content Repurposing Platform
-Version 2.0 — May 2026
-Author: Oladipupo Ishola
-Status: Final — Ready for Development
+**AI-Powered Content Repurposing Platform**
+
+| | |
+|---|---|
+| **Author** | Oladipupo Ishola |
+| **Version** | v2.0 — May 2026 |
+| **Status** | Final — Ready for Development |
 
 ---
 
@@ -22,14 +24,14 @@ The product launches as a private internal tool for the founder, opens to invite
 
 Content creators who want to build a serious presence across multiple platforms face three compounding problems.
 
-- **Problem 1: The manual repurposing tax.**
-  The same idea gets touched five or six times across platforms. Most creators skip repurposing entirely or produce lower quality outputs because of the effort involved.
+**Problem 1: The manual repurposing tax.**
+The same idea gets touched five or six times across platforms. Most creators skip repurposing entirely or produce lower quality outputs because of the effort involved.
 
-- **Problem 2: Generic AI output that sounds like AI.**
-  Without brand voice context, AI-generated content is tonally wrong. The creator rewrites it anyway, defeating the purpose.
+**Problem 2: Generic AI output that sounds like AI.**
+Without brand voice context, AI-generated content is tonally wrong. The creator rewrites it anyway, defeating the purpose.
 
-- **Problem 3: No performance intelligence built in.**
-  Even repurposed content fails to perform when hooks are weak, captions miss platform conventions, and YouTube titles are not searchable. The tool produces content but not results.
+**Problem 3: No performance intelligence built in.**
+Even repurposed content fails to perform when hooks are weak, captions miss platform conventions, and YouTube titles are not searchable. The tool produces content but not results.
 
 ---
 
@@ -68,7 +70,7 @@ The product is built in two clearly defined versions. V1 is the private internal
 - Brand profile creation via document upload — PDF, DOCX, or Markdown (.md)
 - Automatic brand detail extraction stored structured in user profile on Neon
 - Five content input types: LinkedIn post, YouTube transcript, blog article, topic or idea, document upload
-- Text repurposing to X, Instagram caption, TikTok script, YouTube script, LinkedIn post
+- Text repurposing to X, Instagram caption, TikTok script, YouTube script
 - Three variations per platform output with AI-powered recommendation and reasoning
 - Long-form output: SEO blog post and article generation optimised for traditional search and AI search engines
 - Hook scoring and alternative hook suggestions per platform
@@ -79,9 +81,9 @@ The product is built in two clearly defined versions. V1 is the private internal
 - Impact Card / Quote Card generation with subtle brand customisation
 - Tone selector per generation independent of brand profile default
 - Regenerate individual platform outputs without losing others
-- Content history and library — all generations saved, searchable, and soft-deletable
+- Content history and library — all generations saved and searchable
 - BYOK mode for invited testers — API keys stored encrypted per user
-- Rate limiting on all server actions via Upstash Redis
+- Rate limiting on all API routes via Upstash Redis
 - Mobile responsive UI
 - Marketing skills integration from coreyhaines31/marketingskills library
 - Simple usage dashboard for the founder
@@ -96,7 +98,6 @@ The product is built in two clearly defined versions. V1 is the private internal
 - Auto-posting and scheduling integration
 - Analytics per piece of content
 - Team accounts and multiple brand profiles
-- Public REST API endpoints for third-party integrations
 
 ---
 
@@ -104,16 +105,16 @@ The product is built in two clearly defined versions. V1 is the private internal
 
 ### 6.1 Authentication and Access Control
 
-Auth is built from day one using BetterAuth. There are no unprotected routes. Every page and every server action requires a valid session. Users can authenticate via OAuth providers or email and password — both supported from day one.
+Auth is built from day one using BetterAuth. There are no unprotected routes. Every page and every API endpoint requires a valid session. Users can authenticate via OAuth providers or email and password — both supported from day one.
 
 - Sign up and sign in with email and password via BetterAuth
 - OAuth sign in via Google and GitHub — primary and recommended authentication method
 - Users can choose either OAuth or email and password. OAuth is presented as the default option on the login screen for fastest onboarding.
 - Session management with secure HTTP-only cookies
 - User roles: Admin (founder), Tester (BYOK required), Subscriber (V2)
-- All data mutations handled via Next.js Server Actions — keys never exposed to the client
-- Rate limiting per user per server action using Upstash Redis sliding window
-- BYOK mode: testers enter their own Anthropic keys on first login, stored encrypted in Neon using AES-256
+- All API calls routed through Next.js server actions — keys never exposed to the client
+- Rate limiting per user per endpoint using Upstash Redis sliding window
+- BYOK mode: testers enter their own Anthropic and WaveSpeed keys on first login, stored encrypted in Neon using AES-256
 
 ---
 
@@ -135,15 +136,13 @@ The brand profile is what separates ContentEngine from generic repurposing tools
 
 ### 6.3 Content Input Types
 
-ContentEngine accepts five distinct input types. The UI presents these as selectable cards on the main generation screen. The user selects one, pastes or uploads their content, and the generation pipeline receives both the content and the input type as context. The input type is passed so the AI can calibrate tone, structure, and platform adaptation accordingly — a YouTube transcript generates differently from a LinkedIn post even when targeting the same output platform.
-
-| Input Type | Description | Accepted Format |
-|---|---|---|
-| LinkedIn Post | An existing LinkedIn post the user has written or wants to repurpose | Plain text paste |
-| YouTube Transcript | Full or partial transcript from a YouTube video | Plain text paste or .txt upload |
-| Blog Article | A full blog post or article | Plain text paste or .md/.txt upload |
-| Topic or Idea | A rough concept, title, or bullet points — no full content yet | Plain text paste |
-| Document Upload | A PDF, DOCX, or Markdown file | File upload (max 10MB) |
+| Input Type | How It Is Processed |
+|---|---|
+| LinkedIn post | Pasted as plain text. Core message and structure extracted. |
+| YouTube transcript or summary | Key insights, quotes, and story arc extracted before repurposing. |
+| Blog article | Pasted as plain text. Main argument, subpoints, and CTA extracted. |
+| Topic or idea | Treated as a brief. Claude generates content from scratch for each output type, informed by brand profile. |
+| Document upload | PDF, DOCX, or Markdown uploaded. Claude mines it for content angles — PRDs, research, course outlines, sermon notes, Obsidian exports, Notion exports. |
 
 ---
 
@@ -171,7 +170,6 @@ The recommendation is based on three factors: brand profile fit (which variation
 | Instagram Caption | First line works as standalone hook before the "more" cut. Storytelling body. Clear CTA. 8 to 12 relevant hashtags grouped at the bottom. |
 | TikTok Script | Hook in first 3 seconds creates an open loop. Spoken conversational language. 45 to 90 seconds when read aloud. Stage directions in brackets. Strong CTA at the end. |
 | YouTube Script | Strong opening hook. Structured with clear sections. B-roll suggestions in brackets. Conversational but authoritative. SEO title, description, and 6 tags generated alongside. |
-| LinkedIn Post | Professional but human voice. Hook in the first line (avoid opening with "I"). Short punchy paragraphs — 1 to 2 lines each, white space used deliberately. CTA drives to comment or follow. Max 3 relevant hashtags. |
 
 #### PERFORMANCE LAYER
 
@@ -196,7 +194,7 @@ Any input type can be expanded into a full SEO-optimised blog post. This is a di
 - Definition block in the first paragraph: a self-contained answer to the primary query in 40 to 60 words, optimised for AI snippet extraction
 - Structured body with H2 and H3 headings that mirror how people phrase search queries
 - At least one comparison table, numbered list, or step-by-step block for structured content AI search engines cite
-- Statistics and cited sources woven into the body — each statistic increases AI citation probability
+- Statistics and cited sources woven into the body — each statistic increases AI citation probability by up to 37 percent
 - Internal linking suggestions noted in brackets for where the user should link to related content
 - Primary keyword and three to five secondary keywords identified
 - CTA at the end aligned with the user's brand profile
@@ -290,11 +288,11 @@ A single-slide branded image built around the most powerful statement extracted 
 
 Subtle but deliberate. The message is always the hero. The branding claims ownership without fighting the content for attention.
 
-- Brand handle or name displayed small at the bottom in 11px muted text. Enough to claim it, not enough to distract.
+- Brand handle or name displayed small at the bottom — e.g. @olaishola in 11px muted text. Enough to claim it, not enough to distract.
 - Logo mark or brand initial in the corner at low opacity (10 to 15 percent) if stored in brand profile
-- Thin accent bar — 4px along the bottom or left edge in brand primary colour
-- Optional background tint: brand primary colour at 4 to 8 percent opacity on white or black base
-- All customisation values pulled automatically from stored brand profile. Set once, applied everywhere.
+- Thin accent bar — 4px along the bottom or left edge in brand primary colour. A single line of colour that makes the card distinctly theirs across a feed.
+- Optional background tint: brand primary colour at 4 to 8 percent opacity on white or black base. Barely visible but consistently theirs.
+- All customisation values pulled automatically from stored brand profile. Set once, applied everywhere. No manual customisation per card.
 
 #### Export Formats
 
@@ -311,7 +309,6 @@ Subtle but deliberate. The message is always the hero. The branding claims owner
 - User can re-edit any saved output
 - User can regenerate any past session with updated brand profile or tone
 - Search by keyword across all saved generations
-- Soft delete: user can remove a generation from history without permanent data loss
 
 ---
 
@@ -328,118 +325,63 @@ Subtle but deliberate. The message is always the hero. The branding claims owner
 
 ### 7.1 Tech Stack
 
-| Layer | Technology | Rationale |
-|---|---|---|
-| **Framework** | Next.js 16 (App Router) | Server Actions keep API keys server-side by design |
-| **Language** | TypeScript | Type safety across the full stack |
-| **Package Manager** | pnpm | Faster installs, disk-efficient, stricter dependency resolution |
-| **Styling** | Tailwind CSS + shadcn/ui | Maximum speed, zero custom CSS overhead, accessible by default |
-| **Auth** | BetterAuth | Consistent across all Oladipupo Ishola products. OAuth (Google, GitHub) primary; email/password as fallback. |
-| **Database** | Neon (PostgreSQL) | Serverless Postgres, generous free tier, native Vercel integration |
-| **ORM** | Prisma | Developer familiarity, best-in-class schema readability, uses `@prisma/adapter-neon` |
-| **Rate Limiting** | Upstash Redis | Serverless Redis, sliding window, native Vercel integration |
-| **AI** | Anthropic Claude (`claude-sonnet-4-20250514`) | Brand extraction + all generation prompts |
-| **File Storage** | Cloudflare R2 | 10GB free, no egress fees — handles brand docs, carousel exports, and impact card PNGs |
-| **Visual Export** | Playwright | Headless browser for carousel PNG and PDF export |
-| **Client State** | Zustand | Lightweight, minimal boilerplate for shared client state |
-| **Server State** | Next.js Server Actions + React cache | No additional library overhead |
-| **Email** | Resend | Transactional email for auth and notifications |
-| **Analytics** | PostHog | Product analytics and usage insight |
-| **Deployment** | Vercel | Zero-config Next.js deployment |
-| **Marketing Skills** | coreyhaines31/marketingskills | Installed via `npx skills add` to `.agents/skills/` |
+| Layer | Technology |
+|---|---|
+| Framework | Next.js 14 with TypeScript and App Router |
+| Styling | Tailwind CSS and Shadcn UI |
+| Authentication | BetterAuth with OAuth (Google, GitHub) and email and password. OAuth is the primary method. Email and password available as fallback. |
+| Database ORM | Prisma |
+| Database | Neon — serverless PostgreSQL |
+| File Storage | Vercel Blob — brand documents, exported PNGs, PDFs |
+| Email | Resend |
+| Rate Limiting | Upstash Redis |
+| AI — Text Generation | Anthropic Claude API (claude-sonnet-4-20250514) |
+| AI — Image and Video (V2) | WaveSpeed API |
+| Animated Video (V2) | Remotion |
+| Visual Export | Playwright — carousel PNG and PDF export, Impact Card PNG export |
+| Hosting | Vercel |
+| Analytics | PostHog |
+| Marketing Skills | coreyhaines31/marketingskills via npx skills add |
 
 ---
 
 ### 7.2 Database Schema
 
-> **Implementation Note:** BetterAuth requires its own table set for session management. These are defined in `prisma/schema.prisma` and managed automatically. Additional application tables are added per phase.
+**users**
+- id, email, password_hash, role (admin | tester | subscriber), created_at, updated_at
 
-**Core Auth Tables (managed by BetterAuth — do not modify manually)**
-
-**user**
-- id (String PK), name, email (unique), emailVerified (Boolean), image, createdAt, updatedAt
-- Custom field: role (String, default: "subscriber") — values: "admin" | "tester" | "subscriber"
-
-**session**
-- id (String PK), expiresAt, token (unique), createdAt, updatedAt, ipAddress, userAgent, userId (FK → user)
-
-**account**
-- id (String PK), accountId, providerId, userId (FK → user), accessToken, refreshToken, idToken, accessTokenExpiresAt, refreshTokenExpiresAt, scope, password, createdAt, updatedAt
-
-**verification**
-- id (String PK), identifier, value, expiresAt, createdAt, updatedAt
-
-**Application Tables (added per phase)**
-
-**brand_profiles** *(Phase 2)*
+**brand_profiles**
 - id, user_id (FK), raw_document_url, extracted_data (JSON), primary_color, tone, niche, audience, handles (JSON), impact_card_style, created_at, updated_at
 
-**api_keys** *(Phase 2)*
-- id, user_id (FK), anthropic_key_encrypted, created_at
+**api_keys**
+- id, user_id (FK), anthropic_key_encrypted, wavespeed_key_encrypted, created_at
 
-**generations** *(Phase 3)*
+**generations**
 - id, user_id (FK), input_type, input_content, tone_used, platforms (JSON array), output_direction (short | long | both), created_at
 
-**generation_outputs** *(Phase 3)*
-- id, generation_id (FK), platform, variations (JSON array of 3), recommended_variation (1|2|3), recommendation_reason, hook_score, alternative_hooks (JSON), seo_data (JSON for YouTube and blog), carousel_url, tiktok_carousel_url, impact_card_url, deleted_at, created_at
+**generation_outputs**
+- id, generation_id (FK), platform, variations (JSON array of 3), recommended_variation (1|2|3), recommendation_reason, hook_score, alternative_hooks (JSON), seo_data (JSON for YouTube and blog), carousel_url, tiktok_carousel_url, impact_card_url, created_at
 
 ---
 
-### 7.3 API Route Structure (Server Actions)
+### 7.3 API Route Structure
 
-All data mutations are handled via Next.js Server Actions. There are no public REST API endpoints in V1. Every action is session-gated by BetterAuth middleware before execution.
-
-> **Next.js 16 Note:** The `middleware.ts` file convention is deprecated in Next.js 16. The file still works but the build outputs a warning. This will be migrated to the `proxy` convention before production deployment.
-
-> **Future API Note:** If ContentEngine opens to third-party integrations in V2, a public REST API layer will be introduced alongside Server Actions. The internal architecture is designed so this can be added without refactoring the core generation logic — Server Actions and future API routes will share the same underlying service functions.
-
-```
-src/
-  app/
-    api/
-      auth/
-        [...all]/
-          route.ts        → BetterAuth catch-all handler (GET + POST)
-                            Handles: sign-in, sign-up, sign-out, OAuth callbacks
-                            (Google + GitHub OAuth is automatic — no separate oauth.ts needed)
-
-  lib/
-    actions/
-      auth.ts             → signUpAction, signInAction, signOutAction (server actions)
-
-      brand/
-        upload-document.ts  → Accepts PDF/DOCX/MD, validates, stores to R2  *(Phase 2)*
-        extract-brand.ts    → Sends document text to Claude, returns structured JSON  *(Phase 2)*
-        save-profile.ts     → Persists confirmed brand_profile to Neon  *(Phase 2)*
-        update-profile.ts   → Partial updates to existing brand profile  *(Phase 2)*
-
-      generate/
-        text.ts             → Text repurposing pipeline (3 variations + recommendation)  *(Phase 3)*
-        blog.ts             → Long-form blog post generation (angle selection flow)  *(Phase 3)*
-        carousel.ts         → Instagram + LinkedIn carousel HTML generation  *(Phase 5)*
-        tiktok-carousel.ts  → TikTok Photo Mode carousel generation  *(Phase 5)*
-        impact-card.ts      → Impact card / quote card generation  *(Phase 5)*
-        export.ts           → Playwright PNG + PDF export trigger  *(Phase 5)*
-
-      history/
-        list.ts             → Paginated list of past generations  *(Phase 6)*
-        get.ts              → Single generation with all outputs  *(Phase 6)*
-        search.ts           → Keyword search across saved generations  *(Phase 6)*
-        delete.ts           → Soft delete a generation record  *(Phase 6)*
-
-      settings/
-        save-api-keys.ts    → BYOK: encrypt + store Anthropic key  *(Phase 2)*
-        delete-api-keys.ts  → Remove stored keys  *(Phase 2)*
-
-    auth.ts               → BetterAuth server config (providers, Prisma adapter)
-    auth-client.ts        → BetterAuth React client (signIn, signUp, signOut, useSession)
-    prisma.ts             → Prisma singleton (local Postgres dev / Neon adapter prod)
-    ratelimit.ts          → Upstash Redis rate limiter instance
-    validations/
-      auth.ts             → Zod schemas: signUpSchema, signInSchema
-```
-
-> **Note on OAuth:** BetterAuth handles all OAuth provider callbacks internally through the `[...all]` catch-all route. No separate `oauth.ts` action file is required.
+| Route | Function |
+|---|---|
+| POST /api/brand/extract | Receives uploaded document, sends to Claude for extraction, returns structured brand data |
+| POST /api/brand/save | Saves confirmed brand profile to Neon |
+| POST /api/generate/text | Main repurposing endpoint. Returns 3 variations per platform with recommendation and hook analysis. |
+| POST /api/generate/blog | Returns 3 angle options for blog post. On angle selection, generates full article with dual SEO layer and content atoms. |
+| POST /api/generate/carousel | Generates Instagram carousel HTML from content and brand profile |
+| POST /api/generate/tiktok-carousel | Generates TikTok Photo Mode carousel HTML — 9:16 format |
+| POST /api/generate/impact-card | Generates Impact Card HTML with brand customisation applied |
+| POST /api/export/carousel/png | Playwright export — individual PNGs per slide at 1080x1350px |
+| POST /api/export/carousel/pdf | Playwright export — compiled PDF for LinkedIn upload |
+| POST /api/export/tiktok-carousel | Playwright export — individual PNGs at 1080x1920px |
+| POST /api/export/impact-card | Playwright export — PNG at 1080x1080px and 1080x1920px |
+| GET /api/generations | Paginated generation history for authenticated user |
+| GET /api/generations/:id | Single generation with all outputs and all variations |
+| PUT /api/generations/:id | Updates a saved generation output |
 
 ---
 
@@ -447,13 +389,11 @@ src/
 
 - All API keys stored server-side only — never accessible to the client
 - BYOK keys encrypted with AES-256 before storage in Neon
-- Every server action protected by BetterAuth session validation middleware
-- Rate limiting per user per action using Upstash Redis sliding window
-- Auth rate limit: **5 requests per 10 seconds** per IP (sliding window) — prevents brute force attacks
-- Generation rate limits *(Phase 3)*: 10 text generations per hour, 5 exports per hour per user
+- Every API route protected by BetterAuth session validation middleware
+- Rate limiting per user per route using Upstash Redis sliding window
+- Default limits: 10 text generations per hour, 5 exports per hour, 20 requests per minute per route
 - Document uploads validated for file type (PDF, DOCX, MD only) and size (max 10MB) before processing
 - All user data scoped to their account — no cross-user data access possible
-- R2 file access uses signed URLs — no publicly accessible bucket URLs
 
 ---
 
@@ -472,25 +412,15 @@ src/
 
 ### 8.2 Visual Design Direction
 
-ContentEngine's visual identity is pure black and white. The product stands independently from the founder's personal brand. No accent colour is applied globally — the interface earns its authority through precision, space, and typography alone.
-
-Design references: Vercel, Linear, Clerk.
-
-**Core Principles**
-- Dark mode first. Light mode available as a user toggle.
-- Pure black (#000000) and pure white (#FFFFFF) as the only background values. No grey washes, no off-white softening.
-- Neutral shadcn/ui theme as the component foundation — no colour overrides applied globally.
-- One rule for colour in the interface: user brand colours are only ever shown inside the brand profile section and on carousel/card previews. The product shell stays monochrome.
-- Typography does the heavy lifting. Sharp, high-contrast. One sans-serif display weight for headings. Clean body type.
-- Borders and dividers are hairline (1px, low opacity) — space is used for hierarchy, not boxes.
-- Motion is subtle. Fade-ins on generation output. No decorative animation.
-- The generation output area is the hero of every screen. Interface chrome recedes. Content leads.
-
-**Component Approach**
-- shadcn/ui neutral palette, dark mode default
-- Tailwind CSS utility classes only — no custom CSS files
-- Consistent 4px spacing grid
-- Cards have no shadow — they float on black with a hairline border
+| Element | Decision |
+|---|---|
+| Default theme | Light mode default with full dark mode support |
+| Primary accent | Electric indigo #6366F1 — energetic, creative, distinct from founder personal brand |
+| Base | Soft off-white #F8F9FF backgrounds, dark navy #0F172A for text |
+| Typography | DM Sans — warm, approachable, sharp. Works for technical and non-technical users equally. |
+| Corner radius | Generous. Rounded corners throughout. Friendly not clinical. |
+| Three variations display | Tabbed or card layout per platform. Recommended variation highlighted by default. User clicks between them freely. |
+| Naming | Working title: ContentEngine. Final name TBD before V2 commercial launch. |
 
 ---
 
@@ -507,3 +437,116 @@ Design references: Vercel, Linear, Clerk.
 9. All outputs including all three variations saved to history automatically.
 
 ---
+
+## 9. Pricing Model
+
+### V1 — Private and Tester Phase
+
+- Founder (admin): uses own API keys stored in server environment variables
+- Testers: BYOK mode. Must provide their own Anthropic API key. Zero cost to founder.
+- No payment infrastructure in V1
+
+### V2 — Commercial Launch
+
+| Plan | Details |
+|---|---|
+| Starter | Flat monthly fee. Unlimited text repurposing (all platforms, 3 variations). Blog post generation. Instagram carousel and LinkedIn PDF export. Impact Card generation. Single brand profile. |
+| Creator | Higher monthly fee. Everything in Starter. TikTok Photo Mode carousel. Higher monthly video allowance when V2 video features launch. Multiple brand profiles. |
+| BYOK Option | Available on any plan. User provides their own API keys. Reduced monthly fee. |
+
+> **Pricing Note:** Three variations per generation increases token usage roughly threefold versus single output. This must be factored into COGS per user per month when setting V2 price points. Pricing set only after V1 usage data reveals real average cost per active user.
+
+---
+
+## 10. V1 Build Plan
+
+Designed for a solo builder working alongside other commitments. Target: 4 to 6 weeks from start to private deployment on Vercel.
+
+| Week | Focus | Deliverable |
+|---|---|---|
+| Week 1 | Foundation | Next.js project scaffolded. BetterAuth configured and tested. Neon connected. Prisma schema migrated. Vercel deployment live on private URL. |
+| Week 2 | Brand Profile System | Document upload working (PDF, DOCX, MD). Claude extraction pipeline built using brand extraction system prompt. Brand profile saved to database. Onboarding flow complete. |
+| Week 3 | Text Generation | Main generation pipeline live. All four platform outputs working. Three variations per platform with recommendation. Hook scoring. YouTube SEO layer. History saved automatically. |
+| Week 4 | Visual Outputs | Instagram carousel generation and PNG export. LinkedIn PDF export. TikTok Photo Mode carousel. Impact Card with brand customisation. All Playwright exports working. Download buttons functional. |
+| Week 5 | Blog and Polish | Blog post generation with dual SEO layer. Content atom extraction. Mobile responsive audit. Regenerate individual outputs. Tone selector. Content history and search. |
+| Week 6 | Security and Testing | Rate limiting on all routes. BYOK mode for testers. Usage dashboard. Founder uses tool daily. Invited testers onboarded. Feedback collected for V2 scope. |
+
+---
+
+## 11. Success Metrics
+
+### V1 Metrics
+
+- Founder generates and posts content using the tool at least 4 times per week
+- Content generated covers all five platforms consistently
+- Time from input to ready-to-post output is under 3 minutes
+- No API key exposure incidents
+- At least 3 testers onboarded and actively using the tool by end of week 6
+- Founder is using the three variations feature and the recommended option lands correctly at least 70 percent of the time — tracked informally through usage patterns
+
+### V2 Metrics (Pre-launch Targets)
+
+- 10 paying subscribers within 30 days of commercial launch
+- Average session generates content for at least 3 platforms
+- Monthly churn below 10 percent
+- Average Anthropic API cost per user per month is at least 40 percent below subscription price after accounting for three variations per generation
+
+---
+
+## 12. Risks and Mitigations
+
+| Risk | Mitigation |
+|---|---|
+| Three variations triples API cost | V1 BYOK mode means zero API cost during validation. Pricing set only after real V1 usage data. If cost is too high, variations can be gated to Creator plan in V2. |
+| Scope creep delays V1 launch | Video generation, scheduling, and analytics are explicitly deferred to V2. V1 scope is locked. |
+| Generated content does not sound like the user | Brand profile extraction validated by user before saving. Tone selector per generation. Recommendation logic explains reasoning so user learns what works. |
+| Playwright export is unreliable in Vercel environment | Export tested thoroughly in week 4. Vercel has known constraints with Playwright — may need to run export as a separate serverless function or use a hosted browser service. Decision made in week 4. |
+| Three variations creates choice paralysis | Recommended variation highlighted by default. User can copy the recommended one in one click without reviewing the others. The choice is available but never forced. |
+| Product name not finalised | Working title ContentEngine used throughout development. Name finalised before V2 commercial launch. Does not block building. |
+
+---
+
+## 13. Open Questions
+
+- What is the final product name? Working title ContentEngine used until decided.
+- What are the exact V2 subscription price points? Determined after V1 usage data.
+- Should carousel export run server-side on Vercel or via a hosted browser service? Decision needed before Week 4 build.
+- Does V1 support multiple brand profiles per user? Current answer: no. Single profile per user in V1.
+- Should the three variations feature be available on all plans in V2, or gated to Creator? Decision based on API cost data from V1.
+- What is the video generation allowance per plan in V2? Requires WaveSpeed cost analysis per model before decision.
+
+---
+
+## 14. System Prompts Reference
+
+Ready-to-use system prompts for the AI coding agent building the generation pipeline.
+
+### Brand Extraction System Prompt
+
+Store as a constant in `lib/prompts/brand-extraction.ts`. The document text goes in the user message. This prompt goes in the system field.
+
+```
+You are a brand intelligence extraction system. Read the document and extract structured brand information. Return ONLY a valid JSON object with these fields: brand_name, tagline, niche, audience, tone_of_voice, content_pillars (array), key_phrases (array), avoid_phrases (array), platform_handles (object with linkedin/instagram/x/tiktok/youtube), cta_style, brand_values (array), unique_positioning, primary_color, font. If a field cannot be found, return null. Never invent information not in the document. Return only raw JSON. No preamble. No markdown fences.
+```
+
+---
+
+## 15. Appendix
+
+### Reference Products Studied
+
+- **Blotato (blotato.com)** — content creation and repurposing platform. Reference for pricing model, credit system, and multi-platform publishing approach.
+- **WaveSpeed AI (wavespeed.ai)** — unified AI media generation platform with 1000+ models via single API key. Selected as V2 video and image generation provider.
+- **Linear, Raycast, Clerk** — referenced for clean, approachable-but-sharp design direction.
+
+### Key Technical and Skill References
+
+- **coreyhaines31/marketingskills** — open-source marketing skills library. Install: `npx skills add coreyhaines31/marketingskills`. Skills used: social-content, ai-seo, seo-audit, copywriting, content-strategy, launch-strategy.
+- **Instagram Carousel Design System** — established carousel skill with Playwright export pipeline. Integrated directly into ContentEngine carousel output feature.
+- **BetterAuth** — authentication library used across all Oladipupo Ishola products for stack consistency.
+- **Upstash Redis** — rate limiting implementation.
+- **Remotion** — programmatic video generation library. Deferred to V2.
+
+---
+
+*ContentEngine PRD v2.0 — Oladipupo Ishola — May 2026 — Confidential*
