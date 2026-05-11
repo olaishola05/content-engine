@@ -7,9 +7,6 @@ import ws from 'ws';
 import { Pool as PgPool } from 'pg';
 import { PrismaPg } from '@prisma/adapter-pg';
 
-// Required for neon serverless in local environments
-neonConfig.webSocketConstructor = ws;
-
 // Define a global wrapper to prevent multiple instances in development
 const globalForPrisma = globalThis as unknown as { prisma: PrismaClient };
 
@@ -17,6 +14,7 @@ let prisma: PrismaClient;
 
 if (process.env.NODE_ENV === 'production') {
   // In production, we use the Neon adapter for serverless/edge compatibility
+  // We do NOT set neonConfig.webSocketConstructor here as Vercel provides native support.
   const connectionString = process.env.DATABASE_URL;
   if (!connectionString) {
     console.error("CRITICAL: DATABASE_URL is missing in production environment.");
@@ -27,6 +25,9 @@ if (process.env.NODE_ENV === 'production') {
   const adapter = new PrismaNeon(pool as any);
   prisma = new PrismaClient({ adapter });
 } else {
+  // Required for neon serverless only in local Node.js environments
+  neonConfig.webSocketConstructor = ws;
+
   // In development, we check if we're hitting a local database or Neon
   const connectionString = process.env.DATABASE_URL || '';
 
