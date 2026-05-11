@@ -17,14 +17,19 @@ let prisma: PrismaClient;
 
 if (process.env.NODE_ENV === 'production') {
   // In production, we use the Neon adapter for serverless/edge compatibility
-  const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+  const connectionString = process.env.DATABASE_URL;
+  if (!connectionString) {
+    console.error("CRITICAL: DATABASE_URL is missing in production environment.");
+    throw new Error("INTERNAL_DATABASE_CONNECTION_ERROR");
+  }
+  const pool = new Pool({ connectionString });
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const adapter = new PrismaNeon(pool as any);
   prisma = new PrismaClient({ adapter });
 } else {
   // In development, we check if we're hitting a local database or Neon
   const connectionString = process.env.DATABASE_URL || '';
-  
+
   if (connectionString.includes('localhost') || connectionString.includes('127.0.0.1')) {
     // Local PostgreSQL instance - explicitly use standard pg adapter
     if (!globalForPrisma.prisma) {

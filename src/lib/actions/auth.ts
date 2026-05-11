@@ -35,7 +35,17 @@ export async function signUpAction(formData: FormData) {
       headers: await headers(),
     });
   } catch (error) {
-    return { error: (error as Error).message || "Failed to create account" };
+    const message = (error as Error).message;
+    console.error("SIGN_UP_ERROR:", message);
+
+    // Whitelist safe errors (like BetterAuth specific messages)
+    const isSafe = message.toLowerCase().includes("email") || message.toLowerCase().includes("password");
+    
+    if (isSafe && !message.includes("database") && !message.includes("Prisma")) {
+      return { error: message };
+    }
+
+    return { error: "An unexpected error occurred. Please try again later." };
   }
   return redirect("/dashboard");
 }
@@ -67,7 +77,17 @@ export async function signInAction(formData: FormData) {
       headers: await headers(),
     });
   } catch (error) {
-    return { error: (error as Error).message || "Invalid email or password" };
+    const message = (error as Error).message;
+    console.error("SIGN_IN_ERROR:", message);
+
+    // Whitelist safe errors
+    const isSafe = message.toLowerCase().includes("email") || message.toLowerCase().includes("password");
+    
+    if (isSafe && !message.includes("database") && !message.includes("Prisma")) {
+      return { error: message };
+    }
+
+    return { error: "Invalid email or password" };
   }
   return redirect("/dashboard");
 }
