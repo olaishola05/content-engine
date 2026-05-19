@@ -22,10 +22,10 @@ export async function resolveOnboardingGate(): Promise<GateResult> {
 
   const profile = await prisma.brandProfile.findUnique({
     where: { userId },
-    select: { id: true },
+    select: { id: true, profileType: true },
   });
 
-  if (profile) {
+  if (profile && profile.profileType !== 'DRAFT') {
     return { status: 'PROFILE_EXISTS', userId };
   }
 

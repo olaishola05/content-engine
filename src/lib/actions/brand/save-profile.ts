@@ -3,9 +3,9 @@
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth';
 import { headers } from 'next/headers';
-import type { ExtractedBrandProfile } from './extract-brand';
+import type { ExtractedBrandProfile } from './validation';
 
-type ProfileType = 'BASIC' | 'FULL';
+type ProfileType = 'DRAFT' | 'BASIC' | 'FULL';
 
 type ActionResult =
   | { success: true; profileId: string }
@@ -90,4 +90,58 @@ export async function updateBrandProfile(
   });
 
   return { success: true, profileId: updated.id };
+}
+
+/**
+ * Saves questionnaire draft answers to the database under profileType = 'DRAFT'.
+ */
+export async function saveQuestionnaireDraftAction(
+  answers: Record<string, string>
+): Promise<ActionResult> {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session?.user?.id) {
+    return { success: false, error: 'Not authenticated' };
+  }
+
+  const userId = session.user.id;
+
+  // Convert raw form answers to database fields
+  const brandName = answers.brandName || null;
+  const niche = answers.niche || null;
+  const audience = answers.audience || null;
+  const toneOfVoice = answers.tone || null;
+  const contentPillars = answers.pillars
+    ? answers.pillars.split(',').map((s) => s.trim()).filter(Boolean)
+    : [];
+  const brandValues = answers.values
+    ? answers.values.split(',').map((s) => s.trim()).filter(Boolean)
+    : [];
+  const uniquePositioning = answers.positioning || null;
+
+  const saved = await prisma.brandProfile.upsert({
+    where: { userId },
+    create: {
+      userId,
+      profileType: 'DRAFT',
+      brandName,
+      niche,
+      audience,
+      toneOfVoice,
+      contentPillars,
+      brandValues,
+      uniquePositioning,
+    },
+    update: {
+      profileType: 'DRAFT',
+      brandName,
+      niche,
+      audience,
+      toneOfVoice,
+      contentPillars,
+      brandValues,
+      uniquePositioning,
+    },
+  });
+
+  return { success: true, profileId: saved.id };
 }

@@ -2,7 +2,7 @@
 
 import { generateObject } from 'ai';
 import { anthropic } from '@ai-sdk/anthropic';
-import { brandProfileSchema, type ExtractedBrandProfile } from './extract-brand';
+import { brandProfileSchema, type ExtractedBrandProfile } from './validation';
 import { questionnaireSystemPrompt } from '../../prompts/questionnaire';
 
 /**

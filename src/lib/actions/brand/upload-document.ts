@@ -51,14 +51,25 @@ export async function uploadAndExtract(formData: FormData): Promise<UploadResult
   const textChunks = await Promise.all(files.map(extractTextFromFile));
   const combinedText = textChunks.join("\n\n---\n\n");
 
-  // 3. Call Claude to extract the structured brand profile
-  const brandProfile = await extractBrandFromText(combinedText);
+  try {
+    // 3. Call Claude to extract the structured brand profile
+    const brandProfile = await extractBrandFromText(combinedText);
 
-  // 4. Persist to the database as a FULL profile
-  const saveResult = await saveBrandProfile(brandProfile, "FULL");
-  if (!saveResult.success) {
-    return { success: false, error: saveResult.error };
+    // 4. Persist to the database as a FULL profile
+    const saveResult = await saveBrandProfile(brandProfile, "FULL");
+    if (!saveResult.success) {
+      return { success: false, error: saveResult.error };
+    }
+
+    return { success: true };
+  } catch (err) {
+    const errorMessage = err instanceof Error ? err.message : "";
+    console.error("Document extraction failed:", err);
+    return {
+      success: false,
+      error: errorMessage.includes("API key")
+        ? "AI extraction is currently unavailable (API key missing). Please try the Questionnaire path."
+        : "Failed to extract brand data from your documents.",
+    };
   }
-
-  return { success: true };
 }
