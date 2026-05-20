@@ -21,6 +21,8 @@ model User {
   // Custom roles
   role          String    @default("subscriber") // "admin" | "tester" | "subscriber"
   
+  brandProfile  BrandProfile?
+  
   @@map("user")
 }
 
@@ -67,4 +69,36 @@ model Verification {
   updatedAt  DateTime?
 
   @@map("verification")
+}
+
+model BrandProfile {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  profileType       String   @default("BASIC") // "BASIC" or "FULL"
+  
+  // Storage for uploaded documents (Cloudflare R2 URLs)
+  documentUrls      String[]
+  
+  // Extracted/Generated Fields
+  brandName         String?
+  tagline           String?
+  niche             String?
+  audience          String?
+  toneOfVoice       String?
+  contentPillars    String[]
+  keyPhrases        String[]
+  avoidPhrases      String[]
+  platformHandles   Json?    // e.g. { linkedin: "url", twitter: "url" }
+  ctaStyle          String?
+  brandValues       String[]
+  uniquePositioning String?
+  primaryColor      String?
+  font              String?
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@map("brand_profile")
 }
