@@ -22,6 +22,7 @@ model User {
   role          String    @default("subscriber") // "admin" | "tester" | "subscriber"
   
   brandProfile  BrandProfile?
+  generations   Generation[]
   
   @@map("user")
 }
@@ -101,4 +102,33 @@ model BrandProfile {
   updatedAt         DateTime @updatedAt
 
   @@map("brand_profile")
+}
+
+model Generation {
+  id            String             @id @default(cuid())
+  userId        String
+  user          User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  inputText     String
+  inputType     String             // 'LINKEDIN_POST' | 'YOUTUBE_TRANSCRIPT' | 'BLOG_ARTICLE' | 'TOPIC_IDEA' | 'DOCUMENT_UPLOAD'
+  direction     String             // 'SHORT' | 'LONG' | 'BOTH'
+  platforms     String[]           // e.g. ['X', 'INSTAGRAM']
+  tone          String             // 'educational' | 'storytelling' | 'promotional' | 'vulnerable' | 'direct'
+  createdAt     DateTime           @default(now())
+  outputs       GenerationOutput[]
+
+  @@map("generation")
+}
+
+model GenerationOutput {
+  id                   String     @id @default(cuid())
+  generationId         String
+  generation           Generation @relation(fields: [generationId], references: [id], onDelete: Cascade)
+  platform             String     // 'X' | 'INSTAGRAM' | 'TIKTOK' | 'YOUTUBE' | 'LINKEDIN'
+  recommendedIndex     Int        // 0, 1, or 2 (which variation is recommended)
+  recommendationReason String
+  variations           Json       // Array of 3 variations: { angle: string, content: string, hookStrength: string, altHooks: string[] }
+  createdAt            DateTime   @default(now())
+  updatedAt            DateTime   @updatedAt
+
+  @@map("generation_output")
 }
