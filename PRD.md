@@ -472,25 +472,21 @@ src/
 
 ### 8.2 Visual Design Direction
 
-ContentEngine's visual identity is pure black and white. The product stands independently from the founder's personal brand. No accent colour is applied globally — the interface earns its authority through precision, space, and typography alone.
-
-Design references: Vercel, Linear, Clerk.
+ContentEngine follows the **Vercel Design System** (Geist aesthetic), prioritizing developer-grade minimalism, whitespace-as-layout, and precise typographical tracking.
 
 **Core Principles**
-- Dark mode first. Light mode available as a user toggle.
-- Pure black (#000000) and pure white (#FFFFFF) as the only background values. No grey washes, no off-white softening.
-- Neutral shadcn/ui theme as the component foundation — no colour overrides applied globally.
-- One rule for colour in the interface: user brand colours are only ever shown inside the brand profile section and on carousel/card previews. The product shell stays monochrome.
-- Typography does the heavy lifting. Sharp, high-contrast. One sans-serif display weight for headings. Clean body type.
-- Borders and dividers are hairline (1px, low opacity) — space is used for hierarchy, not boxes.
-- Motion is subtle. Fade-ins on generation output. No decorative animation.
-- The generation output area is the hero of every screen. Interface chrome recedes. Content leads.
+- **Default Theme:** Light mode default with full dark mode support.
+- **Canvas Colors:** Pure White (`#ffffff`) page canvas, with warmth-softened Vercel Black (`#171717`) for primary text and headings. 
+- **Workflow Accent Colors:** Colors are functional, marking workflow/pipeline stages: Develop Blue (`#0a72ef`), Preview Pink (`#de1d8d`), and Ship Red (`#ff5b4f`).
+- **Shadow-as-Border:** Avoid traditional CSS borders on cards, input wrappers, and buttons. Use zero-offset spread shadows: `box-shadow: 0px 0px 0px 1px rgba(0,0,0,0.08)` (or `var(--shadow-ring)`).
+- **Typography:** Geist Sans/Geist Mono typeface. Headings leverage aggressive negative tracking (e.g. `-2.4px` on Display, `-1.28px` on `h2`, `-0.96px` on `h3`). Enable OpenType `"liga"` (ligatures) globally.
+- **Borders & Radii:** Corner radii follow Vercel scaling (standard elements: 6px/`radius-md`, cards: 8px/`radius-lg`, tags: 9999px/`radius-full`).
+- **Elevation System:** Sub-whisper shadows for elevation. Standard cards use: `rgba(0,0,0,0.08) 0px 0px 0px 1px, rgba(0,0,0,0.04) 0px 2px 2px`. Highlighted cards use the stacked shadow with an inner `#fafafa` glow ring.
 
 **Component Approach**
-- shadcn/ui neutral palette, dark mode default
-- Tailwind CSS utility classes only — no custom CSS files
-- Consistent 4px spacing grid
-- Cards have no shadow — they float on black with a hairline border
+- **Tailwind Version:** Tailwind CSS v4 using `@theme` utility tokens mapped in `globals.css`.
+- **Three-Weight Hierarchy:** Use 400 (body/reading), 500 (UI/interactive), and 600 (headings/emphasis) only. No bold (700) is used except on micro-badges.
+- **Cards & Tabs:** Card grids float on soft white with layered shadows. Variations for multi-platform displays are toggled using compact navigation tabs.
 
 ---
 
