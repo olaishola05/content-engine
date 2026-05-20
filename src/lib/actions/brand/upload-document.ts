@@ -39,19 +39,19 @@ export async function uploadAndExtract(formData: FormData): Promise<UploadResult
     return { success: false, error: "No files provided" };
   }
 
-  // 1. Upload each file to R2 in parallel
-  await Promise.all(
-    files.map(async (file) => {
-      const buffer = Buffer.from(await file.arrayBuffer());
-      return uploadFileToR2(buffer, file.name, file.type, session.user.id);
-    })
-  );
-
-  // 2. Extract text from each file using the correct extractor, then combine
-  const textChunks = await Promise.all(files.map(extractTextFromFile));
-  const combinedText = textChunks.join("\n\n---\n\n");
-
   try {
+    // 1. Upload each file to R2 in parallel
+    await Promise.all(
+      files.map(async (file) => {
+        const buffer = Buffer.from(await file.arrayBuffer());
+        return uploadFileToR2(buffer, file.name, file.type, session.user.id);
+      })
+    );
+
+    // 2. Extract text from each file using the correct extractor, then combine
+    const textChunks = await Promise.all(files.map(extractTextFromFile));
+    const combinedText = textChunks.join("\n\n---\n\n");
+
     // 3. Call Claude to extract the structured brand profile
     const brandProfile = await extractBrandFromText(combinedText);
 
@@ -65,6 +65,12 @@ export async function uploadAndExtract(formData: FormData): Promise<UploadResult
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : "";
     console.error("Document extraction failed:", err);
+    if (errorMessage.includes("R2 environment variables are missing")) {
+      return {
+        success: false,
+        error: "Cloud storage is currently unconfigured (R2 credentials missing). Please try the Questionnaire path.",
+      };
+    }
     return {
       success: false,
       error: errorMessage.includes("API key")
