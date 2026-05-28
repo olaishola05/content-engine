@@ -38,6 +38,14 @@ const outputSchema = z.object({
   ).length(1),
 });
 
+/**
+ * API route handler to regenerate repurposed text outputs for a single specified platform.
+ * Verifies user auth, rate limits request, validates body parameters, ensures the generation
+ * record belongs to the user, and streams the structured output from Claude.
+ * 
+ * @param req - NextRequest object containing generationId and platform
+ * @returns A streamed text response containing the generated structure
+ */
 export async function POST(req: NextRequest) {
   try {
     // 1. Authenticate user
