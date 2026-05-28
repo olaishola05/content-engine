@@ -1,8 +1,8 @@
 # AI toolkit symlinks (managed globally via ~/.config/agents_skills)
-agents
-hooks
-skills
-slash-commands
+/agents
+/hooks
+/skills
+/slash-commands
 
 # OS / Editor
 .DS_Store
