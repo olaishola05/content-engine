@@ -21,11 +21,27 @@ export default async function DashboardPage() {
     <div className="flex-1 flex flex-col">
       {/* ── Top Nav ─────────────────────────── */}
       <header className="h-14 bg-white border-b border-[#ebebeb] flex items-center justify-between px-6 sticky top-0 z-10">
-        <div className="flex items-center gap-3">
-          <svg height="24" viewBox="0 0 75 65" fill="#171717">
-            <path d="M37.59.25l36.95 64H.64l36.95-64z"></path>
-          </svg>
-          <span className="text-ui font-semibold">ContentEngine</span>
+        <div className="flex items-center gap-6">
+          <div className="flex items-center gap-3">
+            <svg height="24" viewBox="0 0 75 65" fill="#171717">
+              <path d="M37.59.25l36.95 64H.64l36.95-64z"></path>
+            </svg>
+            <span className="text-ui font-semibold">ContentEngine</span>
+          </div>
+          <nav className="hidden sm:flex items-center gap-4 text-sm font-medium">
+            <Link
+              href="/dashboard"
+              className="text-[#171717] hover:text-[#171717]/80"
+            >
+              Dashboard
+            </Link>
+            <Link
+              href="/generate"
+              className="text-[#666666] hover:text-[#171717] transition-colors"
+            >
+              Generate
+            </Link>
+          </nav>
         </div>
 
         <div className="flex items-center gap-6">
@@ -93,11 +109,18 @@ export default async function DashboardPage() {
 
             <div className="divider-h bg-[#ebebeb] h-px" />
 
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
+              <Link
+                id="generate-content-btn"
+                href="/generate"
+                className="px-4 py-2 bg-[#171717] hover:bg-[#171717]/90 text-white rounded-lg text-sm font-medium shadow-[0_1px_2px_rgba(0,0,0,0.05)] transition-all"
+              >
+                Generate Content
+              </Link>
               <Link
                 id="manage-brand-btn"
                 href="/onboarding/review"
-                className="px-4 py-2 bg-[#171717] hover:bg-[#171717]/90 text-white rounded-lg text-sm font-medium shadow-[0_1px_2px_rgba(0,0,0,0.05)] transition-all"
+                className="px-4 py-2 bg-white hover:bg-[#fafafa] text-[#171717] border border-[#ebebeb] rounded-lg text-sm font-medium shadow-[0_1px_2px_rgba(0,0,0,0.05)] transition-all"
               >
                 Manage Profile
               </Link>

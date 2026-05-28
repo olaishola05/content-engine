@@ -17,9 +17,9 @@ if (process.env.NODE_ENV === 'production') {
   // Vercel Serverless functions support TCP connections natively.
   // The @neondatabase/serverless WebSocket driver causes ErrorEvent failures
   // on Vercel and cannot handle channel_binding=require over WebSocket transport.
-  const connectionString = process.env.DATABASE_URL;
+  const connectionString = process.env.DATABASE_URL || process.env.POSTGRES_PRISMA_URL || process.env.POSTGRES_URL;
   if (!connectionString) {
-    console.error("CRITICAL: DATABASE_URL is missing in production environment.");
+    console.error("CRITICAL: DATABASE_URL, POSTGRES_PRISMA_URL, and POSTGRES_URL are missing in production environment.");
     throw new Error("INTERNAL_DATABASE_CONNECTION_ERROR");
   }
   // max: 1 is important for serverless — each function invocation gets one connection
@@ -31,7 +31,7 @@ if (process.env.NODE_ENV === 'production') {
   // WebSocket polyfill required ONLY for local Node.js environments
   neonConfig.webSocketConstructor = ws;
 
-  const connectionString = process.env.DATABASE_URL || '';
+  const connectionString = process.env.DATABASE_URL || process.env.POSTGRES_PRISMA_URL || process.env.POSTGRES_URL || '';
 
   if (connectionString.includes('localhost') || connectionString.includes('127.0.0.1')) {
     // Local PostgreSQL — use standard pg adapter

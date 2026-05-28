@@ -415,12 +415,13 @@ Subtle but deliberate. The message is always the hero. The branding claims owner
 | Element | Decision |
 |---|---|
 | Default theme | Light mode default with full dark mode support |
-| Primary accent | Electric indigo #6366F1 — energetic, creative, distinct from founder personal brand |
-| Base | Soft off-white #F8F9FF backgrounds, dark navy #0F172A for text |
-| Typography | DM Sans — warm, approachable, sharp. Works for technical and non-technical users equally. |
-| Corner radius | Generous. Rounded corners throughout. Friendly not clinical. |
+| Primary accent | Vercel Black (`#171717`) for primary interactive states. Workflow steps colored with: Develop Blue (`#0a72ef`), Preview Pink (`#de1d8d`), and Ship Red (`#ff5b4f`) |
+| Base | Pure white (`#ffffff`) page canvas, dark neutral (`#171717`) for text |
+| Typography | Geist Sans (headings & body) / Geist Mono (technical text) |
+| Corner radius | Vercel-inspired scaling: 6px (`radius-md`) for buttons, 8px (`radius-lg`) for cards, 9999px for pills |
 | Three variations display | Tabbed or card layout per platform. Recommended variation highlighted by default. User clicks between them freely. |
 | Naming | Working title: ContentEngine. Final name TBD before V2 commercial launch. |
+| Borders & Shadow | Replaced by `box-shadow: 0px 0px 0px 1px rgba(0,0,0,0.08)` (zero-offset spread shadows) |
 
 ---
 
