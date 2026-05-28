@@ -25,6 +25,8 @@ export interface GenerationOutputProps {
   isGenerating: boolean;
   activePlatform: Platform;
   setActivePlatform: (platform: Platform) => void;
+  onRegeneratePlatform?: (platform: Platform) => void;
+  regeneratingPlatform?: Platform | null;
 }
 
 /**
@@ -77,10 +79,14 @@ export default function GenerationOutput({
   isGenerating,
   activePlatform,
   setActivePlatform,
+  onRegeneratePlatform,
+  regeneratingPlatform,
 }: GenerationOutputProps) {
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const activeOutput = outputs.find((o) => o.platform === activePlatform);
+  const isPlatformRegenerating = regeneratingPlatform === activePlatform;
+  const isGeneratingOrRegenerating = isGenerating || isPlatformRegenerating;
 
   const handleCopy = (text: string, id: string) => {
     navigator.clipboard.writeText(text);
@@ -123,7 +129,7 @@ export default function GenerationOutput({
       </div>
 
       {/* Main Content Area */}
-      {isGenerating && !activeOutput ? (
+      {isGeneratingOrRegenerating && !activeOutput ? (
         <div className="space-y-4 animate-pulse">
           <div className="h-16 w-full bg-[#fafafa] border border-[#ebebeb] rounded-lg" />
           <div className="space-y-4">
@@ -147,6 +153,29 @@ export default function GenerationOutput({
         </div>
       ) : activeOutput ? (
         <div className="space-y-6">
+          {/* Header row with Platform name and Regenerate button */}
+          <div className="flex justify-between items-center pb-2 border-b border-[#ebebeb]/50">
+            <span className="text-xs font-bold text-[#171717] uppercase tracking-wider">
+              {activePlatform === 'X' ? '𝕏' : activePlatform} Variations
+            </span>
+            {onRegeneratePlatform && (
+              <button
+                type="button"
+                id="regenerate-platform-btn"
+                disabled={isGenerating || isPlatformRegenerating}
+                onClick={() => onRegeneratePlatform(activePlatform)}
+                className={[
+                  'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0068d6]',
+                  isGenerating || isPlatformRegenerating
+                    ? 'bg-[#fafafa] border-[#ebebeb] text-[#a1a1aa] cursor-not-allowed'
+                    : 'bg-white border-[#ebebeb] text-[#4d4d4d] hover:border-[#171717]/30 hover:bg-gray-50 cursor-pointer shadow-[0_1px_2px_rgba(0,0,0,0.05)]',
+                ].join(' ')}
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${isPlatformRegenerating ? 'animate-spin' : ''}`} />
+                <span>{isPlatformRegenerating ? 'Regenerating...' : 'Regenerate'}</span>
+              </button>
+            )}
+          </div>
           {/* AI Recommendation Banner */}
           {activeOutput.recommendationReason && (
             <div className="p-4 bg-[#fafafa] rounded-lg border border-[#ebebeb] shadow-sm flex gap-3">

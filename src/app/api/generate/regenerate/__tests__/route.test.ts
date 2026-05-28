@@ -9,10 +9,12 @@ vi.mock('@/lib/prisma', () => ({
       findUnique: vi.fn(),
     },
     generation: {
-      create: vi.fn().mockResolvedValue({ id: 'gen_123' }),
+      findUnique: vi.fn(),
     },
     generationOutput: {
-      createMany: vi.fn().mockResolvedValue({ count: 1 }),
+      findFirst: vi.fn(),
+      update: vi.fn(),
+      create: vi.fn(),
     },
   },
 }));
@@ -51,14 +53,14 @@ vi.mock('next/headers', () => ({
   headers: vi.fn().mockResolvedValue(new Headers()),
 }));
 
-describe('POST /api/generate/text', () => {
+describe('POST /api/generate/regenerate', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     process.env.ANTHROPIC_API_KEY = 'sk-ant-test-key-1234';
   });
 
   const createMockRequest = (body: Record<string, any>) => {
-    return new NextRequest('http://localhost/api/generate/text', {
+    return new NextRequest('http://localhost/api/generate/regenerate', {
       method: 'POST',
       body: JSON.stringify(body),
     });
@@ -70,10 +72,8 @@ describe('POST /api/generate/text', () => {
 
     const { POST } = await import('../route');
     const req = createMockRequest({
-      inputText: 'AI content',
-      inputType: 'LINKEDIN_POST',
-      platforms: ['X'],
-      tone: 'educational',
+      generationId: 'gen_123',
+      platform: 'X',
     });
 
     const res = await POST(req);
@@ -98,16 +98,68 @@ describe('POST /api/generate/text', () => {
 
     const { POST } = await import('../route');
     const req = createMockRequest({
-      inputText: 'AI content',
-      inputType: 'LINKEDIN_POST',
-      platforms: ['X'],
-      tone: 'educational',
+      generationId: 'gen_123',
+      platform: 'X',
     });
 
     const res = await POST(req);
     expect(res.status).toBe(429);
     const data = await res.json();
     expect(data.error).toContain('Too many requests');
+  });
+
+  it('returns 400 if request body has invalid parameters', async () => {
+    const { auth } = await import('@/lib/auth');
+    const { textGenRateLimit } = await import('@/lib/ratelimit');
+
+    vi.mocked(auth.api.getSession).mockResolvedValue({
+      user: { id: 'user_123' },
+    } as any);
+    vi.mocked(textGenRateLimit.limit).mockResolvedValue({
+      success: true,
+    } as any);
+
+    const { POST } = await import('../route');
+    
+    // Missing platform
+    const req1 = createMockRequest({
+      generationId: 'gen_123',
+    });
+    const res1 = await POST(req1);
+    expect(res1.status).toBe(400);
+
+    // Invalid platform enum
+    const req2 = createMockRequest({
+      generationId: 'gen_123',
+      platform: 'INVALID',
+    });
+    const res2 = await POST(req2);
+    expect(res2.status).toBe(400);
+  });
+
+  it('returns 404 if the original generation is not found or does not belong to the user', async () => {
+    const { auth } = await import('@/lib/auth');
+    const { textGenRateLimit } = await import('@/lib/ratelimit');
+    const { prisma } = await import('@/lib/prisma');
+
+    vi.mocked(auth.api.getSession).mockResolvedValueOnce({
+      user: { id: 'user_123' },
+    } as any);
+    vi.mocked(textGenRateLimit.limit).mockResolvedValueOnce({
+      success: true,
+    } as any);
+    vi.mocked(prisma.generation.findUnique).mockResolvedValueOnce(null);
+
+    const { POST } = await import('../route');
+    const req = createMockRequest({
+      generationId: 'gen_123',
+      platform: 'X',
+    });
+
+    const res = await POST(req);
+    expect(res.status).toBe(404);
+    const data = await res.json();
+    expect(data.error).toContain('Generation not found');
   });
 
   it('returns 400 if brand profile is missing', async () => {
@@ -121,75 +173,26 @@ describe('POST /api/generate/text', () => {
     vi.mocked(textGenRateLimit.limit).mockResolvedValueOnce({
       success: true,
     } as any);
+    vi.mocked(prisma.generation.findUnique).mockResolvedValueOnce({
+      id: 'gen_123',
+      userId: 'user_123',
+      inputText: 'content',
+      inputType: 'LINKEDIN_POST',
+      tone: 'educational',
+      direction: 'SHORT',
+    } as any);
     vi.mocked(prisma.brandProfile.findUnique).mockResolvedValueOnce(null);
 
     const { POST } = await import('../route');
     const req = createMockRequest({
-      inputText: 'AI content',
-      inputType: 'LINKEDIN_POST',
-      platforms: ['X'],
-      tone: 'educational',
+      generationId: 'gen_123',
+      platform: 'X',
     });
 
     const res = await POST(req);
     expect(res.status).toBe(400);
     const data = await res.json();
     expect(data.error).toContain('Brand profile not found');
-  });
-
-  it('returns 400 if ANTHROPIC_API_KEY is missing', async () => {
-    delete process.env.ANTHROPIC_API_KEY;
-
-    const { auth } = await import('@/lib/auth');
-    const { textGenRateLimit } = await import('@/lib/ratelimit');
-    const { prisma } = await import('@/lib/prisma');
-
-    vi.mocked(auth.api.getSession).mockResolvedValueOnce({
-      user: { id: 'user_123' },
-    } as any);
-    vi.mocked(textGenRateLimit.limit).mockResolvedValueOnce({
-      success: true,
-    } as any);
-    vi.mocked(prisma.brandProfile.findUnique).mockResolvedValueOnce({
-      id: 'bp_123',
-      brandName: 'My Brand',
-    } as any);
-
-    const { POST } = await import('../route');
-    const req = createMockRequest({
-      inputText: 'AI content',
-      inputType: 'LINKEDIN_POST',
-      platforms: ['X'],
-      tone: 'educational',
-    });
-
-    const res = await POST(req);
-    expect(res.status).toBe(400);
-    const data = await res.json();
-    expect(data.code).toBe('MISSING_API_KEY');
-  });
-
-  it('returns 400 if request body has invalid parameters', async () => {
-    const { auth } = await import('@/lib/auth');
-    const { textGenRateLimit } = await import('@/lib/ratelimit');
-
-    vi.mocked(auth.api.getSession).mockResolvedValueOnce({
-      user: { id: 'user_123' },
-    } as any);
-    vi.mocked(textGenRateLimit.limit).mockResolvedValueOnce({
-      success: true,
-    } as any);
-
-    const { POST } = await import('../route');
-    
-    // Missing platforms and tone
-    const req = createMockRequest({
-      inputText: 'AI content',
-      inputType: 'LINKEDIN_POST',
-    });
-
-    const res = await POST(req);
-    expect(res.status).toBe(400);
   });
 
   it('successfully triggers streamObject and returns text stream on valid request', async () => {
@@ -204,6 +207,14 @@ describe('POST /api/generate/text', () => {
     vi.mocked(textGenRateLimit.limit).mockResolvedValueOnce({
       success: true,
     } as any);
+    vi.mocked(prisma.generation.findUnique).mockResolvedValueOnce({
+      id: 'gen_123',
+      userId: 'user_123',
+      inputText: 'Original content',
+      inputType: 'LINKEDIN_POST',
+      tone: 'educational',
+      direction: 'SHORT',
+    } as any);
     vi.mocked(prisma.brandProfile.findUnique).mockResolvedValueOnce({
       id: 'bp_123',
       brandName: 'My Brand',
@@ -216,10 +227,8 @@ describe('POST /api/generate/text', () => {
 
     const { POST } = await import('../route');
     const req = createMockRequest({
-      inputText: 'Original content to repurpose',
-      inputType: 'LINKEDIN_POST',
-      platforms: ['X', 'LINKEDIN'],
-      tone: 'educational',
+      generationId: 'gen_123',
+      platform: 'X',
     });
 
     const res = await POST(req);

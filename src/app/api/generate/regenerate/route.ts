@@ -15,24 +15,12 @@ import {
   type Tone,
 } from '../../../../lib/prompts/text-generation';
 
-// Input request validation schema
-const textGenerationRequestSchema = z.object({
-  inputText: z.string().min(1, 'Input content is required'),
-  inputType: z.enum([
-    'LINKEDIN_POST',
-    'YOUTUBE_TRANSCRIPT',
-    'BLOG_ARTICLE',
-    'TOPIC_IDEA',
-    'DOCUMENT_UPLOAD',
-  ]),
-  platforms: z.array(z.enum(['X', 'INSTAGRAM', 'TIKTOK', 'YOUTUBE', 'LINKEDIN'])).min(1, 'Select at least one platform'),
-  tone: z.enum(['educational', 'storytelling', 'promotional', 'vulnerable', 'direct']),
-  direction: z.enum(['SHORT', 'LONG', 'BOTH']).default('SHORT'),
+const regenerateRequestSchema = z.object({
+  generationId: z.string().min(1, 'Generation ID is required'),
+  platform: z.enum(['X', 'INSTAGRAM', 'TIKTOK', 'YOUTUBE', 'LINKEDIN']),
 });
 
-// Zod output schema for structured object streaming
 const outputSchema = z.object({
-  generationId: z.string(),
   outputs: z.array(
     z.object({
       platform: z.enum(['X', 'INSTAGRAM', 'TIKTOK', 'YOUTUBE', 'LINKEDIN']),
@@ -47,7 +35,7 @@ const outputSchema = z.object({
         })
       ).length(3),
     })
-  ),
+  ).length(1),
 });
 
 export async function POST(req: NextRequest) {
@@ -81,7 +69,7 @@ export async function POST(req: NextRequest) {
 
     // 4. Validate body parameters
     const json = await req.json();
-    const validation = textGenerationRequestSchema.safeParse(json);
+    const validation = regenerateRequestSchema.safeParse(json);
     if (!validation.success) {
       return NextResponse.json(
         { error: 'Invalid parameters', details: validation.error.format() },
@@ -89,9 +77,21 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { inputText, inputType, platforms, tone, direction } = validation.data;
+    const { generationId, platform } = validation.data;
 
-    // 5. Retrieve user's brand profile
+    // 5. Retrieve original generation inputs & verify ownership
+    const originalGeneration = await prisma.generation.findUnique({
+      where: { id: generationId },
+    });
+
+    if (!originalGeneration || originalGeneration.userId !== userId) {
+      return NextResponse.json(
+        { error: 'Generation not found or does not belong to you.' },
+        { status: 404 }
+      );
+    }
+
+    // 6. Retrieve user's brand profile
     const brandProfile = await prisma.brandProfile.findUnique({
       where: { userId },
     });
@@ -103,13 +103,18 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 6. Load marketing skills context
+    // 7. Load marketing skills context
     const socialSkill = await getSkillContent('social');
     const copywritingSkill = await getSkillContent('copywriting');
 
     // Assemble system prompt with skills context injected
     const systemPromptText = `
-${buildTextGenerationSystemPrompt(brandProfile, platforms as Platform[], tone as Tone, inputType as InputType)}
+${buildTextGenerationSystemPrompt(
+  brandProfile,
+  [platform] as Platform[],
+  originalGeneration.tone as Tone,
+  originalGeneration.inputType as InputType
+)}
 
 ## Advanced Strategic Copywriting Frameworks
 Use the guidelines below to maximize hook engagement, creative angle variety, and message clarity:
@@ -118,47 +123,57 @@ ${copywritingSkill ? `### Core Copywriting Principles:\n${copywritingSkill.conte
 ${socialSkill ? `### Social Media Optimisation Guidelines:\n${socialSkill.content}\n` : ''}
 `;
 
-    // 7. Create Generation record in DB before streaming
-    const generation = await prisma.generation.create({
-      data: {
-        userId,
-        inputText,
-        inputType,
-        direction,
-        platforms: platforms as string[],
-        tone,
-      },
-    });
-
     // 8. Trigger streamObject using Anthropic Sonnet Latest
     const result = await streamObject({
       model: anthropic('claude-3-7-sonnet-latest'),
       schema: outputSchema,
       system: systemPromptText,
-      prompt: `Please repurpose the following original content into the requested platforms and tone. Important: populate the generationId field with "${generation.id}" in your JSON response:\n\n${inputText}`,
+      prompt: `Please repurpose the following original content into the requested platform and tone:\n\n${originalGeneration.inputText}`,
       onFinish: async ({ object }) => {
         try {
-          if (!object?.outputs) return;
+          if (!object?.outputs?.[0]) return;
 
-          // Save outputs to prisma DB linked to the created generation
-          await prisma.generationOutput.createMany({
-            data: object.outputs.map((out) => ({
-              generationId: generation.id,
-              platform: out.platform,
-              recommendedIndex: out.recommendedIndex,
-              recommendationReason: out.recommendationReason,
-              variations: out.variations as unknown as Prisma.InputJsonValue,
-            })),
+          const newOutput = object.outputs[0];
+
+          // Check if there is an existing output record for this generation and platform
+          const existingOutput = await prisma.generationOutput.findFirst({
+            where: {
+              generationId,
+              platform,
+            },
           });
+
+          if (existingOutput) {
+            // Update the existing output
+            await prisma.generationOutput.update({
+              where: { id: existingOutput.id },
+              data: {
+                recommendedIndex: newOutput.recommendedIndex,
+                recommendationReason: newOutput.recommendationReason,
+                variations: newOutput.variations as unknown as Prisma.InputJsonValue,
+              },
+            });
+          } else {
+            // Create a new output
+            await prisma.generationOutput.create({
+              data: {
+                generationId,
+                platform,
+                recommendedIndex: newOutput.recommendedIndex,
+                recommendationReason: newOutput.recommendationReason,
+                variations: newOutput.variations as unknown as Prisma.InputJsonValue,
+              },
+            });
+          }
         } catch (dbError) {
-          console.error('[API/GENERATE/TEXT] Failed to persist generation outputs:', dbError);
+          console.error('[API/GENERATE/REGENERATE] Failed to persist regenerated output:', dbError);
         }
       },
     });
 
     return result.toTextStreamResponse();
   } catch (error) {
-    console.error('[API/GENERATE/TEXT] Execution error:', error);
+    console.error('[API/GENERATE/REGENERATE] Execution error:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

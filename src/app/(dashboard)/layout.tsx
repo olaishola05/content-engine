@@ -10,7 +10,7 @@ export default async function DashboardLayout({
   const gate = await resolveOnboardingGate();
 
   if (gate.status === "UNAUTHENTICATED") redirect("/sign-in");
-  // if (gate.status === "NEEDS_ONBOARDING") redirect("/onboarding");
+  if (gate.status === "NEEDS_ONBOARDING") redirect("/onboarding");
 
   return (
     <div className="min-h-screen flex flex-col bg-[#fafafa]">

@@ -23,6 +23,7 @@ import {
 
 // Define schema on client side to match the route handler schema exactly
 const clientOutputSchema = z.object({
+  generationId: z.string().optional(),
   outputs: z.array(
     z.object({
       platform: z.enum(['X', 'INSTAGRAM', 'TIKTOK', 'YOUTUBE', 'LINKEDIN']),
@@ -55,6 +56,15 @@ export default function GenerateClient({ userEmail }: GenerateClientProps) {
   // Active tab state for the output component
   const [activePlatform, setActivePlatform] = useState<Platform>('X');
 
+  // Tracks the DB generationId from the last streamed response
+  const [generationId, setGenerationId] = useState<string | null>(null);
+
+  // Per-platform regeneration loading state
+  const [regeneratingPlatform, setRegeneratingPlatform] = useState<Platform | null>(null);
+
+  // Merged outputs: base (from full-gen stream) overridden by per-platform regen results
+  const [regenOutputs, setRegenOutputs] = useState<PlatformOutput[]>([]);
+
 
 
   // Character & word counters
@@ -73,7 +83,13 @@ export default function GenerateClient({ userEmail }: GenerateClientProps) {
         : rawMsg;
       toast.error(cleanMsg);
     },
-    onFinish: () => {
+    onFinish: ({ object: finishedObj }) => {
+      // Capture generationId from the finished stream so platform regen can reference it
+      if (finishedObj?.generationId) {
+        setGenerationId(finishedObj.generationId);
+      }
+      // Reset any prior regen overrides when a full generation completes
+      setRegenOutputs([]);
       toast.success('Variations generated successfully!');
     },
   });
@@ -106,8 +122,69 @@ export default function GenerateClient({ userEmail }: GenerateClientProps) {
     submit(inputData);
   };
 
+  /**
+   * Re-generates a single platform output without losing the others.
+   * Calls POST /api/generate/regenerate with the stored generationId + platform.
+   * On success, merges the new output into the displayed results.
+   */
+  const handleRegeneratePlatform = async (platform: Platform) => {
+    if (!generationId) {
+      toast.error('Cannot regenerate — no generation session found. Please generate first.');
+      return;
+    }
+    setRegeneratingPlatform(platform);
+    try {
+      const res = await fetch('/api/generate/regenerate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ generationId, platform }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        toast.error(data?.error || 'Regeneration failed. Please try again.');
+        return;
+      }
+      // Parse the streamed response — it is a JSON text stream, read to end
+      const text = await res.text();
+      // Extract the first complete JSON object line
+      const lines = text.split('\n').filter(Boolean);
+      let newOutput: PlatformOutput | null = null;
+      for (const line of lines) {
+        try {
+          const parsed = JSON.parse(line);
+          if (parsed?.outputs?.[0]) {
+            const out = parsed.outputs[0];
+            newOutput = {
+              platform: (out.platform || platform) as Platform,
+              recommendedIndex: out.recommendedIndex,
+              recommendationReason: out.recommendationReason,
+              variations: out.variations,
+            };
+            break;
+          }
+        } catch {
+          // skip non-JSON lines
+        }
+      }
+      if (newOutput) {
+        setRegenOutputs((prev) => [
+          ...prev.filter((o) => o.platform !== platform),
+          newOutput!,
+        ]);
+        toast.success(`${platform} variations regenerated!`);
+      } else {
+        toast.error('Could not parse regenerated variations.');
+      }
+    } catch (err) {
+      console.error('[REGENERATE]', err);
+      toast.error('An unexpected error occurred during regeneration.');
+    } finally {
+      setRegeneratingPlatform(null);
+    }
+  };
+
   // Map the streamed partial/complete object back to the expected PlatformOutput format
-  const mappedOutputs: PlatformOutput[] =
+  const streamedOutputs: PlatformOutput[] =
     (object?.outputs as Array<{
       platform?: string;
       recommendedIndex?: number;
@@ -129,6 +206,12 @@ export default function GenerateClient({ userEmail }: GenerateClientProps) {
         altHooks: v?.altHooks ? (v.altHooks.filter(Boolean) as string[]) : undefined,
       })),
     })) || [];
+
+  // Merge: start with streamed outputs, override any platform with regen output
+  const mappedOutputs: PlatformOutput[] = [
+    ...streamedOutputs.filter((o) => !regenOutputs.some((r) => r.platform === o.platform)),
+    ...regenOutputs,
+  ];
 
   return (
     <div className="flex-1 flex flex-col">
@@ -334,6 +417,8 @@ export default function GenerateClient({ userEmail }: GenerateClientProps) {
                   isGenerating={isLoading}
                   activePlatform={activePlatform}
                   setActivePlatform={setActivePlatform}
+                  onRegeneratePlatform={generationId ? handleRegeneratePlatform : undefined}
+                  regeneratingPlatform={regeneratingPlatform}
                 />
               </div>
             </div>
