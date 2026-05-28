@@ -25,6 +25,16 @@ const PLATFORM_CONSTRAINTS: Record<Platform, string> = {
   LINKEDIN: 'Max 3,000 characters. Hook in the first 2 lines before "see more" cutoff. Professional but human tone. Line breaks for skimmability. No more than 3 hashtags.',
 };
 
+/**
+ * Builds the system prompt for text generation by combining the brand profile details,
+ * target platforms constraints, selected tone, and type of input content.
+ * 
+ * @param brand The selected brand profile attributes
+ * @param platforms Array of target social platforms
+ * @param tone Selected content tone (e.g. educational, storytelling)
+ * @param inputType The format of the source content (e.g. LinkedIn post, transcript)
+ * @returns The complete system prompt string for Claude
+ */
 export function buildTextGenerationSystemPrompt(
   brand: Pick<
     BrandProfile,
@@ -85,6 +95,12 @@ After generating all 3 variations for a platform, identify the recommended one (
 Return ONLY valid JSON. No markdown fences, no commentary outside the JSON structure.`;
 }
 
+/**
+ * Formats the raw input type enum into a user-friendly English noun phrase.
+ * 
+ * @param inputType Raw enum value representing source content type
+ * @returns A friendly string description
+ */
 function formatInputType(inputType: InputType): string {
   const labels: Record<InputType, string> = {
     LINKEDIN_POST: 'a LinkedIn post',
