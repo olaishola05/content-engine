@@ -46,10 +46,5 @@ export function validateGenerationInput(input: GenerationInput): ValidationResul
     return { success: false, error: { message: 'Select at least one platform' } };
   }
 
-  // LONG direction is disabled until Phase 4 (blog post expansion feature)
-  if (input.direction === 'LONG') {
-    return { success: false, error: { message: 'Long direction is disabled until Phase 4' } };
-  }
-
   return { success: true };
 }

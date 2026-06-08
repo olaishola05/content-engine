@@ -34,10 +34,10 @@ describe('validateGenerationInput', () => {
     expect(result.error?.message).toContain('Select at least one platform');
   });
 
-  it('fails when direction is LONG (disabled until Phase 4)', () => {
+  it('passes when direction is LONG', () => {
     const result = validateGenerationInput({ ...validInput, direction: 'LONG' as const });
-    expect(result.success).toBe(false);
-    expect(result.error?.message).toContain('Long direction is disabled');
+    expect(result.success).toBe(true);
+    expect(result.error).toBeUndefined();
   });
 
   it('passes when direction is BOTH', () => {
