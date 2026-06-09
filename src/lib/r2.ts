@@ -7,13 +7,15 @@ import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
  * @param fileName The original file name
  * @param mimeType The file's MIME type
  * @param userId The user uploading the file
+ * @param basePath Optional base path prefix (defaults to 'brand-documents' for backward compat; use 'visual-exports' for Phase 5 assets)
  * @returns The public URL to the uploaded file
  */
 export async function uploadFileToR2(
   buffer: Buffer,
   fileName: string,
   mimeType: string,
-  userId: string
+  userId: string,
+  basePath: string = 'brand-documents'
 ): Promise<string> {
   const bucketName = process.env.CLOUDFLARE_R2_BUCKET_NAME;
   const endpoint = process.env.CLOUDFLARE_R2_ENDPOINT;
@@ -36,7 +38,7 @@ export async function uploadFileToR2(
   // Construct a safe, structured path
   const uniquePrefix = Date.now().toString();
   const safeFileName = fileName.replace(/[^a-zA-Z0-9.-]/g, '_');
-  const key = `brand-documents/${userId}/${uniquePrefix}-${safeFileName}`;
+  const key = `${basePath}/${userId}/${uniquePrefix}-${safeFileName}`;
 
   const command = new PutObjectCommand({
     Bucket: bucketName,

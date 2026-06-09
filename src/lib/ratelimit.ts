@@ -37,3 +37,19 @@ export const textGenRateLimit = isUpstashConfigured
       // Mock limiter for local development when Upstash is not set up
       limit: async () => ({ success: true, limit: 10, remaining: 9, reset: Date.now() }),
     };
+
+// Visual exports (carousels + impact cards): max 5 exports per hour per user
+export const visualExportRateLimit = isUpstashConfigured
+  ? new Ratelimit({
+      redis: new Redis({
+        url: process.env.UPSTASH_REDIS_REST_URL!,
+        token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+      }),
+      limiter: Ratelimit.slidingWindow(5, "1 h"),
+      analytics: true,
+      prefix: "@upstash/ratelimit/visual-export",
+    })
+  : {
+      // Mock limiter for local development when Upstash is not set up
+      limit: async () => ({ success: true, limit: 5, remaining: 4, reset: Date.now() }),
+    };

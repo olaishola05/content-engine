@@ -253,6 +253,18 @@ export default function GenerateClient({ userEmail }: GenerateClientProps) {
             </p>
           </div>
 
+          {/* Discoverability wiring for visual outputs (Task 11) */}
+          <div className="p-3 bg-[#fff0f6] rounded-xl border border-[#fcd5e4]">
+            <p className="text-xs font-semibold text-[#de1d8d] mb-1">New: Visual Outputs</p>
+            <div className="flex gap-2 text-sm">
+              <Link href="/generate/carousel/instagram" className="text-[#de1d8d] hover:underline">Instagram Carousel</Link>
+              <span className="text-[#666]">•</span>
+              <Link href="/generate/carousel/tiktok" className="text-[#de1d8d] hover:underline">TikTok Carousel</Link>
+              <span className="text-[#666]">•</span>
+              <Link href="/generate/impact-card" className="text-[#de1d8d] hover:underline">Impact Card</Link>
+            </div>
+          </div>
+
           {/* Form + Output Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             {/* Input Controls */}
