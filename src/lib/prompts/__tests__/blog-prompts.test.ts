@@ -5,6 +5,8 @@ import { buildBlogAngleSystemPrompt } from '../blog-angle';
 import { buildBlogArticleSystemPrompt } from '../blog-article';
 import { buildContentAtomsSystemPrompt } from '../content-atoms';
 import { buildYoutubeSeoSystemPrompt } from '../youtube-seo';
+import { buildCarouselCopySystemPrompt } from '../carousel-copy';
+import { buildImpactStatementSystemPrompt } from '../impact-statement';
 
 // Shared minimal brand stub
 const mockBrand = {
@@ -18,6 +20,7 @@ const mockBrand = {
   brandValues: ['transparency', 'quality'],
   uniquePositioning: 'The fastest way to ship AI features',
   ctaStyle: 'Subscribe for more',
+  primaryColor: '#de1d8d',
 };
 
 // ─── blog-angle.ts ────────────────────────────────────────────────────────────
@@ -195,5 +198,68 @@ describe('buildYoutubeSeoSystemPrompt', () => {
   it('includes the source transcript in the prompt', () => {
     const result = buildYoutubeSeoSystemPrompt(sampleTranscript, sampleBlogTitle);
     expect(result).toContain(sampleTranscript);
+  });
+});
+
+// ─── carousel-copy.ts ────────────────────────────────────────────────────────
+
+describe('buildCarouselCopySystemPrompt', () => {
+  const sampleContent = 'Our new AI tool helps developers ship features 10x faster with zero boilerplate.';
+
+  it('returns a non-empty string', () => {
+    const result = buildCarouselCopySystemPrompt(sampleContent, 'instagram', mockBrand);
+    expect(typeof result).toBe('string');
+    expect(result.length).toBeGreaterThan(0);
+  });
+
+  it('includes the source content in the prompt', () => {
+    const result = buildCarouselCopySystemPrompt(sampleContent, 'instagram', mockBrand);
+    expect(result).toContain(sampleContent);
+  });
+
+  it('instructs to generate adaptable 7-slide arc for Instagram', () => {
+    const result = buildCarouselCopySystemPrompt(sampleContent, 'instagram', mockBrand);
+    expect(result.toLowerCase()).toContain('7-slide');
+    expect(result).toContain('Hero, Problem, Solution');
+  });
+
+  it('instructs to generate 3-5 slides for TikTok with minimal text', () => {
+    const result = buildCarouselCopySystemPrompt(sampleContent, 'tiktok', mockBrand);
+    expect(result).toContain('3');
+    expect(result).toContain('5');
+    expect(result.toLowerCase()).toContain('bold typography');
+  });
+
+  it('requires JSON output with slides array', () => {
+    const result = buildCarouselCopySystemPrompt(sampleContent, 'instagram', mockBrand);
+    expect(result).toContain('slides');
+  });
+});
+
+// ─── impact-statement.ts ─────────────────────────────────────────────────────
+
+describe('buildImpactStatementSystemPrompt', () => {
+  const sampleContent = 'Our new AI tool helps developers ship features 10x faster with zero boilerplate.';
+
+  it('returns a non-empty string', () => {
+    const result = buildImpactStatementSystemPrompt(sampleContent, mockBrand);
+    expect(typeof result).toBe('string');
+    expect(result.length).toBeGreaterThan(0);
+  });
+
+  it('includes the source content in the prompt', () => {
+    const result = buildImpactStatementSystemPrompt(sampleContent, mockBrand);
+    expect(result).toContain(sampleContent);
+  });
+
+  it('requires exactly 3 statement options', () => {
+    const result = buildImpactStatementSystemPrompt(sampleContent, mockBrand);
+    expect(result).toContain('3');
+    expect(result.toLowerCase()).toContain('impactful');
+  });
+
+  it('supports regeneration by asking for options', () => {
+    const result = buildImpactStatementSystemPrompt(sampleContent, mockBrand);
+    expect(result.toLowerCase()).toContain('regenerate');
   });
 });
