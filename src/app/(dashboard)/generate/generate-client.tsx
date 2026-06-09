@@ -335,7 +335,7 @@ export default function GenerateClient({ userEmail }: GenerateClientProps) {
                     <div className="flex flex-col gap-1.5">
                       <label className="text-[11px] font-semibold text-[#4d4d4d] flex items-center gap-1">
                         <span>Format Length</span>
-                        <span title="Long formats like full blog expansions are gated until Phase 4">
+                        <span title="Long-form: generates a full SEO blog post from your source content">
                           <HelpCircle className="w-3 h-3 text-[#888888] cursor-help" />
                         </span>
                       </label>
@@ -352,17 +352,15 @@ export default function GenerateClient({ userEmail }: GenerateClientProps) {
                         >
                           Short-form
                         </button>
-                        <button
-                          type="button"
-                          disabled
-                          className="flex-1 h-9 rounded-md text-xs font-semibold border border-[#ebebeb] bg-[#fafafa] text-[#a1a1aa] cursor-not-allowed relative"
-                          title="Blog Post expansion is coming in Phase 4"
+                        <Link
+                          href="/generate/blog"
+                          className={[
+                            'flex-1 h-9 rounded-md text-xs font-semibold border flex items-center justify-center transition-all duration-200',
+                            'bg-white border-[#ebebeb] text-[#4d4d4d] hover:border-[#171717]/20',
+                          ].join(' ')}
                         >
-                          <span>Long</span>
-                          <span className="absolute -top-1.5 -right-1 px-1 rounded bg-amber-500 text-white text-[8px] scale-75 font-bold uppercase">
-                            Soon
-                          </span>
-                        </button>
+                          Long
+                        </Link>
                       </div>
                     </div>
                   </div>

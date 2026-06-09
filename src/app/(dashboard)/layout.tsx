@@ -11,7 +11,7 @@ export default async function DashboardLayout({
 
   if (gate.status === "UNAUTHENTICATED") redirect("/sign-in");
   // Pls don't uncomment the check below. Using it to test when no is completed during development
-  // if (gate.status === "NEEDS_ONBOARDING") redirect("/onboarding");
+  if (gate.status === "NEEDS_ONBOARDING") redirect("/onboarding");
 
   return (
     <div className="min-h-screen flex flex-col bg-[#fafafa]">
