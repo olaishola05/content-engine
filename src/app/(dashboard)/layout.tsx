@@ -6,7 +6,7 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // Enforce onboarding gate
+  // Enforce onboarding gate (library routes inherit this via (dashboard) layout)
   const gate = await resolveOnboardingGate();
 
   if (gate.status === "UNAUTHENTICATED") redirect("/sign-in");
