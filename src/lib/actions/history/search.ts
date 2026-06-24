@@ -53,7 +53,8 @@ export async function searchHistoryAction(
     const skip = (page - 1) * pageSize;
     const searchTerm = input.query.trim();
 
-    // Fetch with include to allow post-filter on variations (V1 simple contains)
+    // V1: fetch all rows matching inputText, then post-filter and paginate in-memory.
+    // Cache key excludes page/pageSize so all pages share the same cache entry per search term.
     const fetchSearch = unstable_cache(
       async () => prisma.generation.findMany({
         where: {
@@ -70,18 +71,20 @@ export async function searchHistoryAction(
           },
         },
       }),
-      [`history-search-${userId}-${searchTerm}-${page}-${pageSize}`],
+      [`history-search-${userId}-${searchTerm}`],
       { tags: [`history-${userId}`] }
     );
 
     const allMatching = await fetchSearch();
 
-    // Post-filter for variations JSON match (V1 simple approach)
+    // Post-filter for variations JSON match (V1 simple approach).
+    // lowerSearch is hoisted out of the loop to avoid recomputing on every iteration.
+    const lowerSearch = searchTerm.toLowerCase();
     const matching = allMatching.filter((g) => {
-      if (g.inputText.toLowerCase().includes(searchTerm.toLowerCase())) return true;
+      if (g.inputText.toLowerCase().includes(lowerSearch)) return true;
       return g.outputs.some((o) => {
         const varsStr = JSON.stringify(o.variations || {}).toLowerCase();
-        return varsStr.includes(searchTerm.toLowerCase());
+        return varsStr.includes(lowerSearch);
       });
     });
 
