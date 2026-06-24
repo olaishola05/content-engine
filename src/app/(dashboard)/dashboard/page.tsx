@@ -41,6 +41,12 @@ export default async function DashboardPage() {
             >
               Generate
             </Link>
+            <Link
+              href="/library"
+              className="text-[#666666] hover:text-[#171717] transition-colors"
+            >
+              Library
+            </Link>
           </nav>
         </div>
 
@@ -124,6 +130,13 @@ export default async function DashboardPage() {
               >
                 Manage Profile
               </Link>
+              <Link
+                id="view-library-btn"
+                href="/library"
+                className="px-4 py-2 bg-white hover:bg-[#fafafa] text-[#171717] border border-[#ebebeb] rounded-lg text-sm font-medium shadow-[0_1px_2px_rgba(0,0,0,0.05)] transition-all"
+              >
+                View Library
+              </Link>
             </div>
           </div>
 
@@ -139,18 +152,16 @@ export default async function DashboardPage() {
                 { label: "Visual Assets", status: "pending" },
               ].map((step, i) => (
                 <div key={step.label} className="flex items-center gap-3">
-                  <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] ${
-                    step.status === "complete" ? "bg-[#171717] text-white" :
+                  <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] ${step.status === "complete" ? "bg-[#171717] text-white" :
                     step.status === "current" ? "bg-white text-[#171717] shadow-[0_0_0_2px_#171717]" :
-                    "bg-[#fafafa] text-[#888888] shadow-[0_0_0_1px_#ebebeb]"
-                  }`}>
+                      "bg-[#fafafa] text-[#888888] shadow-[0_0_0_1px_#ebebeb]"
+                    }`}>
                     {step.status === "complete" ? "✓" : i + 1}
                   </div>
-                  <span className={`text-sm ${
-                    step.status === "complete" ? "text-[#171717] line-through opacity-50" :
+                  <span className={`text-sm ${step.status === "complete" ? "text-[#171717] line-through opacity-50" :
                     step.status === "current" ? "text-[#171717] font-medium" :
-                    "text-[#888888]"
-                  }`}>
+                      "text-[#888888]"
+                    }`}>
                     {step.label}
                   </span>
                 </div>

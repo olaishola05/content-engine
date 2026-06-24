@@ -114,6 +114,7 @@ model Generation {
   platforms     String[]           // e.g. ['X', 'INSTAGRAM']
   tone          String             // 'educational' | 'storytelling' | 'promotional' | 'vulnerable' | 'direct'
   createdAt     DateTime           @default(now())
+  deletedAt     DateTime?          // soft delete for history/library (null = active)
   outputs       GenerationOutput[]
 
   @@map("generation")

@@ -43,6 +43,11 @@ vi.mock('next/headers', () => ({
   headers: vi.fn().mockResolvedValue(new Headers()),
 }));
 
+vi.mock('next/cache', () => ({
+  revalidateTag: vi.fn(),
+  unstable_cache: vi.fn((fn: () => unknown) => fn),
+}));
+
 describe('Impact Card Server Actions', () => {
   beforeEach(() => {
     vi.clearAllMocks();

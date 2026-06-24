@@ -1,0 +1,4 @@
+# Files to skip in pre-commit/pre-push security checks
+# Add relative paths from the repository root (one path per line)
+
+prisma/schema.prisma

@@ -72,7 +72,7 @@ describe('DashboardPage Server Component', () => {
     await expect(DashboardPage()).rejects.toThrow('Redirect to /sign-in');
   });
 
-  it('renders correctly with brand profile info and links to /generate', async () => {
+  it('renders correctly with brand profile info and links to /generate and /dashboard/library', async () => {
     const { auth } = await import('@/lib/auth');
     vi.mocked(auth.api.getSession).mockResolvedValueOnce({
       user: { id: 'user_123', email: 'test@example.com', name: 'John Doe' },
@@ -100,5 +100,9 @@ describe('DashboardPage Server Component', () => {
     // Verify that the rendered page contains a Link pointing to /generate
     const containsGenerateLink = hasLinkWithHref(result, '/generate');
     expect(containsGenerateLink).toBe(true);
+
+    // Verify Library link for discoverability (Task 8)
+    const containsLibraryLink = hasLinkWithHref(result, '/library');
+    expect(containsLibraryLink).toBe(true);
   });
 });
