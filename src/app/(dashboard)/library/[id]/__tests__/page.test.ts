@@ -21,6 +21,16 @@ vi.mock('next/headers', () => ({
   headers: vi.fn().mockResolvedValue(new Headers()),
 }));
 
+// Mock next/link
+vi.mock('next/link', () => ({
+  default: ({ href, children }: { href: string; children: unknown }) => `Link:${href}:${children}`,
+}));
+
+// Mock signOutAction
+vi.mock('@/lib/actions/auth', () => ({
+  signOutAction: vi.fn(),
+}));
+
 // Mock history server actions
 vi.mock('@/lib/actions/history', () => ({
   getHistoryAction: vi.fn(),
@@ -49,7 +59,7 @@ describe('Library Detail Page Server Component', () => {
     ).rejects.toThrow('Redirect to /sign-in');
   });
 
-  it('redirects to /dashboard/library if fetching generation fails (not found or unauthorized)', async () => {
+  it('redirects to /library if fetching generation fails (not found or unauthorized)', async () => {
     const { auth } = await import('@/lib/auth');
     const { getHistoryAction } = await import('@/lib/actions/history');
 
@@ -67,7 +77,7 @@ describe('Library Detail Page Server Component', () => {
       LibraryDetailPage({
         params: Promise.resolve({ id: 'gen_invalid' }),
       })
-    ).rejects.toThrow('Redirect to /dashboard/library');
+    ).rejects.toThrow('Redirect to /library');
   });
 
   it('renders GenerationDetail if authenticated and generation exists', async () => {

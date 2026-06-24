@@ -3,6 +3,7 @@
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth';
 import { headers } from 'next/headers';
+import { revalidateTag } from 'next/cache';
 
 export type UpdateOutputResult =
   | { success: true }
@@ -60,6 +61,7 @@ export async function updateOutputAction(
       data: { variations },
     });
 
+    revalidateTag(`history-${userId}`, 'max');
     return { success: true };
   } catch (error) {
     console.error('[ACTIONS/HISTORY/UPDATE] updateOutputAction error:', error);

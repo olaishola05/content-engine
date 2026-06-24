@@ -3,6 +3,7 @@
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth';
 import { headers } from 'next/headers';
+import { unstable_cache } from 'next/cache';
 
 export type HistoryListInput = {
   page?: number;
@@ -46,28 +47,24 @@ export async function listHistoryAction(
     const pageSize = input.pageSize ?? 20;
     const skip = (page - 1) * pageSize;
 
-    const [generations, total] = await Promise.all([
-      prisma.generation.findMany({
-        where: {
-          userId,
-          deletedAt: null,
-        },
-        orderBy: { createdAt: 'desc' },
-        skip,
-        take: pageSize,
-        include: {
-          outputs: {
-            select: { platform: true },
-          },
-        },
-      }),
-      prisma.generation.count({
-        where: {
-          userId,
-          deletedAt: null,
-        },
-      }),
-    ]);
+    const fetchHistory = unstable_cache(
+      async () => Promise.all([
+        prisma.generation.findMany({
+          where: { userId, deletedAt: null },
+          orderBy: { createdAt: 'desc' },
+          skip,
+          take: pageSize,
+          include: { outputs: { select: { platform: true } } },
+        }),
+        prisma.generation.count({
+          where: { userId, deletedAt: null },
+        }),
+      ]),
+      [`history-list-${userId}-${page}-${pageSize}`],
+      { tags: [`history-${userId}`] }
+    );
+
+    const [generations, total] = await fetchHistory();
 
     const hasMore = skip + generations.length < total;
 

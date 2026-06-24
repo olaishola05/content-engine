@@ -3,6 +3,7 @@
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth';
 import { headers } from 'next/headers';
+import { unstable_cache } from 'next/cache';
 
 export type HistorySearchInput = {
   query: string;
@@ -53,21 +54,27 @@ export async function searchHistoryAction(
     const searchTerm = input.query.trim();
 
     // Fetch with include to allow post-filter on variations (V1 simple contains)
-    const allMatching = await prisma.generation.findMany({
-      where: {
-        userId,
-        deletedAt: null,
-        OR: [
-          { inputText: { contains: searchTerm, mode: 'insensitive' as const } },
-        ],
-      },
-      orderBy: { createdAt: 'desc' },
-      include: {
-        outputs: {
-          select: { platform: true, variations: true },
+    const fetchSearch = unstable_cache(
+      async () => prisma.generation.findMany({
+        where: {
+          userId,
+          deletedAt: null,
+          OR: [
+            { inputText: { contains: searchTerm, mode: 'insensitive' as const } },
+          ],
         },
-      },
-    });
+        orderBy: { createdAt: 'desc' },
+        include: {
+          outputs: {
+            select: { platform: true, variations: true },
+          },
+        },
+      }),
+      [`history-search-${userId}-${searchTerm}-${page}-${pageSize}`],
+      { tags: [`history-${userId}`] }
+    );
+
+    const allMatching = await fetchSearch();
 
     // Post-filter for variations JSON match (V1 simple approach)
     const matching = allMatching.filter((g) => {

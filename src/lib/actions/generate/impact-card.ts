@@ -3,6 +3,7 @@
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth';
 import { headers } from 'next/headers';
+import { revalidateTag } from 'next/cache';
 import { generateObject } from 'ai';
 import { anthropic } from '@ai-sdk/anthropic';
 import { z } from 'zod';
@@ -74,6 +75,8 @@ export async function generateImpactStatementAction(input: {
         tone: 'direct',
       },
     });
+
+    revalidateTag(`history-${userId}`, 'max');
 
     return {
       success: true,

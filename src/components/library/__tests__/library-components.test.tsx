@@ -18,6 +18,12 @@ vi.mock('@/lib/actions/history/regenerate', () => ({
   regenerateGenerationAction: vi.fn().mockResolvedValue({ success: true, newGenerationId: 'new_gen' }),
 }));
 
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({
+    push: vi.fn(),
+  }),
+}));
+
 describe('Library Components', () => {
   const mockBrand = {
     brandName: 'TestBrand',

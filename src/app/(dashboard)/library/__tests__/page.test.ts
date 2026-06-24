@@ -10,6 +10,11 @@ vi.mock('@/lib/auth', () => ({
   },
 }));
 
+// Mock auth actions (signOutAction used in nav header)
+vi.mock('@/lib/actions/auth', () => ({
+  signOutAction: vi.fn(),
+}));
+
 // Mock next/navigation
 vi.mock('next/navigation', () => ({
   redirect: vi.fn((url) => {
@@ -20,6 +25,11 @@ vi.mock('next/navigation', () => ({
 // Mock next/headers
 vi.mock('next/headers', () => ({
   headers: vi.fn().mockResolvedValue(new Headers()),
+}));
+
+// Mock next/link
+vi.mock('next/link', () => ({
+  default: ({ href, children }: { href: string; children: unknown }) => `Link:${href}:${children}`,
 }));
 
 // Mock the history action
@@ -36,6 +46,7 @@ vi.mock('@/components/library/search-bar', () => ({
 vi.mock('@/components/library/history-list', () => ({
   default: ({ generations }: { generations: any[] }) => `HistoryList:${generations.length}`,
 }));
+
 
 describe('Library List Page Server Component', () => {
   beforeEach(() => {

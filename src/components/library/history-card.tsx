@@ -15,7 +15,7 @@ interface HistoryCardProps {
   };
 }
 
-export default function HistoryCard({ generation, brand }: HistoryCardProps) {
+export default function HistoryCard({ generation }: HistoryCardProps) {
   const date = new Date(generation.createdAt).toLocaleDateString();
   const preview = generation.inputText.length > 80 
     ? generation.inputText.substring(0, 80) + '...' 
@@ -30,10 +30,9 @@ export default function HistoryCard({ generation, brand }: HistoryCardProps) {
   }[generation.inputType] || '📄';
 
   return (
-    <div 
-      data-testid="history-card" 
-      className="p-4 border rounded-lg mb-2 hover:bg-gray-50"
-      style={{ borderColor: brand?.primaryColor || '#e5e7eb' }}
+    <div
+      data-testid="history-card"
+      className="p-4 border border-[#ebebeb] rounded-lg bg-white shadow-[0_0_0_1px_rgba(0,0,0,0.04)] group-hover:border-[#171717] group-hover:shadow-[0_2px_8px_rgba(0,0,0,0.06)] transition-all h-full flex flex-col"
     >
       <div className="flex items-center justify-between mb-2">
         <span className="text-sm text-gray-500">{date}</span>

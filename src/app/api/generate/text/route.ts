@@ -8,6 +8,7 @@ import type { Prisma } from '@prisma/client';
 import { auth } from '@/lib/auth';
 import { textGenRateLimit } from '@/lib/ratelimit';
 import { getSkillContent } from '@/lib/skills/loader';
+import { revalidateTag } from 'next/cache';
 import {
   buildTextGenerationSystemPrompt,
   type InputType,
@@ -150,6 +151,8 @@ ${socialSkill ? `### Social Media Optimisation Guidelines:\n${socialSkill.conten
               variations: out.variations as unknown as Prisma.InputJsonValue,
             })),
           });
+
+          revalidateTag(`history-${userId}`, 'max');
         } catch (dbError) {
           console.error('[API/GENERATE/TEXT] Failed to persist generation outputs:', dbError);
         }

@@ -102,7 +102,7 @@ describe('DashboardPage Server Component', () => {
     expect(containsGenerateLink).toBe(true);
 
     // Verify Library link for discoverability (Task 8)
-    const containsLibraryLink = hasLinkWithHref(result, '/dashboard/library');
+    const containsLibraryLink = hasLinkWithHref(result, '/library');
     expect(containsLibraryLink).toBe(true);
   });
 });

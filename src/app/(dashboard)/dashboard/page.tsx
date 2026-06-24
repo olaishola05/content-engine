@@ -42,7 +42,7 @@ export default async function DashboardPage() {
               Generate
             </Link>
             <Link
-              href="/dashboard/library"
+              href="/library"
               className="text-[#666666] hover:text-[#171717] transition-colors"
             >
               Library
@@ -132,7 +132,7 @@ export default async function DashboardPage() {
               </Link>
               <Link
                 id="view-library-btn"
-                href="/dashboard/library"
+                href="/library"
                 className="px-4 py-2 bg-white hover:bg-[#fafafa] text-[#171717] border border-[#ebebeb] rounded-lg text-sm font-medium shadow-[0_1px_2px_rgba(0,0,0,0.05)] transition-all"
               >
                 View Library

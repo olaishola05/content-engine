@@ -7,6 +7,7 @@ import { generateObject } from 'ai';
 import { anthropic } from '@ai-sdk/anthropic';
 import { z } from 'zod';
 import { textGenRateLimit } from '@/lib/ratelimit';
+import { revalidateTag } from 'next/cache';
 import { buildBlogAngleSystemPrompt } from '../../prompts/blog-angle';
 import type { Generation, GenerationOutput } from '@prisma/client';
 import type { InputType, Tone } from '../../prompts/text-generation';
@@ -84,6 +85,8 @@ export async function generateBlogAnglesAction(input: {
         tone: input.tone,
       },
     });
+
+    revalidateTag(`history-${userId}`, 'max');
 
     return {
       success: true,

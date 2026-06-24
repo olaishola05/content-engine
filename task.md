@@ -92,3 +92,24 @@
     2. Add support for a `.securityignore` file in `hooks/security` to bypass files by name.
     3. Create `.securityignore` and add `prisma/schema.prisma` to it.
   - Verification: Run `./hooks/security` and `./hooks/pre-commit` to verify logs are printed correctly and ignore works.
+
+- [x] **Task 10: Enhance Library UI & Caching Layer**
+  - What: 
+    1. Constrained search bar to `max-w-md w-full` with Geist styling.
+    2. Switched library listings to a responsive 4-column layout with group-hover card styles and link wrapping.
+    3. Added context-specific empty states (blank history list vs no results for query).
+    4. Centered pages and unified layout with top navigation header.
+    5. Implemented query caching via `unstable_cache` and cache invalidation tags (`revalidateTag`).
+  - Verification: Instruct user to run specific unit tests locally.
+
+- [x] **Task 11: Fix empty search query & URL behavior**
+  - What: 
+    1. Update `search-bar.tsx` to be a `'use client'` component, intercept empty searches to redirect directly to `/library` (removing `?query=` parameters), and add a "Clear" button for active queries.
+    2. Normalize query params in `library/page.tsx` to handle empty strings as `undefined`.
+  - Verification: Instruct user to run specific tests locally.
+
+- [x] **Task 12: Fix failing tests — missing `next/cache` mock**
+  - What: 7 tests were failing across 4 files (`blog.test.ts`, `carousel.test.ts`, `impact-card.test.ts`, `history.test.ts`) because `revalidateTag` (from `next/cache`) was called in the action implementations but `next/cache` was never mocked in those test files. Outside of a Next.js server context, `revalidateTag` throws, causing the action's `catch` block to return `{ success: false }` — flipping assertions from true → false.
+  - Fix: Added `vi.mock('next/cache', () => ({ revalidateTag: vi.fn(), unstable_cache: vi.fn((fn) => fn) }))` to all 4 affected test files.
+  - `tsc --noEmit` confirmed clean (no type errors).
+  - Validation: User confirmed all 4 test files pass locally (Green ✅).

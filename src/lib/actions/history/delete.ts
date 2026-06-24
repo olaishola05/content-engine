@@ -3,6 +3,7 @@
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth';
 import { headers } from 'next/headers';
+import { revalidateTag } from 'next/cache';
 
 export type HistoryDeleteResult =
   | { success: true }
@@ -44,6 +45,7 @@ export async function deleteHistoryAction(
       data: { deletedAt: new Date() },
     });
 
+    revalidateTag(`history-${userId}`, 'max');
     return { success: true };
   } catch (error) {
     console.error('[ACTIONS/HISTORY/DELETE] deleteHistoryAction error:', error);
