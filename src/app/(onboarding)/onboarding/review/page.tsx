@@ -12,12 +12,17 @@ export default async function ReviewPage({
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session?.user?.id) redirect('/sign-in');
 
-  const profile = await prisma.brandProfile.findUnique({
-    where: { userId: session.user.id },
-  });
+  const [profile, dbUser] = await Promise.all([
+    prisma.brandProfile.findUnique({ where: { userId: session.user.id } }),
+    prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { role: true },
+    }),
+  ]);
 
   if (!profile) redirect('/onboarding');
 
+  const isTester = dbUser?.role === 'tester';
   const { path } = await searchParams;
 
   const formProfile = {
@@ -53,7 +58,7 @@ export default async function ReviewPage({
         </p>
       </div>
 
-      <ReviewForm profile={formProfile} path={path ?? null} />
+      <ReviewForm profile={formProfile} path={path ?? null} isTester={isTester} />
     </div>
   );
 }

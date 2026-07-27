@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { updateBrandProfile } from '@/lib/actions/brand/save-profile';
+import { saveUserApiKeyAction } from '@/lib/actions/brand/save-api-key';
 import type { ExtractedBrandProfile } from '@/lib/actions/brand/validation';
 
 type Field = keyof ExtractedBrandProfile;
@@ -10,13 +11,16 @@ type Field = keyof ExtractedBrandProfile;
 export default function ReviewForm({
   profile: initial,
   path,
+  isTester = false,
 }: {
   profile: Partial<ExtractedBrandProfile>;
   path: string | null;
+  isTester?: boolean;
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [profile, setProfile] = useState(initial);
+  const [apiKey, setApiKey] = useState('');
   const [error, setError] = useState<string | null>(null);
 
   const setField = (key: Field, value: string | string[]) =>
@@ -25,6 +29,19 @@ export default function ReviewForm({
   const handleSave = () => {
     setError(null);
     startTransition(async () => {
+      if (isTester) {
+        const trimmedKey = apiKey.trim();
+        if (!trimmedKey.startsWith('sk-ant-') || trimmedKey.length < 20) {
+          setError("Please enter a valid Anthropic API key starting with 'sk-ant-'");
+          return;
+        }
+        const keyResult = await saveUserApiKeyAction(trimmedKey);
+        if (!keyResult.success) {
+          setError(keyResult.error);
+          return;
+        }
+      }
+
       const result = await updateBrandProfile(profile);
       if (result.success) {
         router.push('/dashboard');
@@ -88,6 +105,27 @@ export default function ReviewForm({
         <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-[#fafafa] border border-[#ebebeb] text-sm text-[#4d4d4d]">
           <span>💡</span>
           <p>You have a Basic Profile. Upload brand documents later in Settings to unlock a Full Profile.</p>
+        </div>
+      )}
+
+      {isTester && (
+        <div className="space-y-3 p-6 rounded-2xl bg-white shadow-[0_0_0_1px_rgba(0,0,0,0.08)]">
+          <div>
+            <p className="text-xs font-semibold text-[#171717] uppercase tracking-widest mb-0.5">API Credentials</p>
+            <p className="text-[#808080] text-xs">Your key is encrypted and stored securely. It is never logged or shared.</p>
+          </div>
+          <div className="flex flex-col gap-1">
+            <label htmlFor="anthropic-api-key" className="text-sm font-medium text-[#4d4d4d]">Anthropic API Key</label>
+            <input
+              id="anthropic-api-key"
+              type="password"
+              autoComplete="off"
+              placeholder="sk-ant-…"
+              value={apiKey}
+              onChange={(e) => setApiKey(e.target.value)}
+              className="w-full px-3 py-2.5 rounded-xl border border-[#ebebeb] bg-[#fafafa] text-sm text-[#171717] placeholder:text-[#b3b3b3] focus:outline-none focus:ring-2 focus:ring-[#171717]/10 transition"
+            />
+          </div>
         </div>
       )}
 

@@ -1,7 +1,6 @@
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { signOutAction } from "@/lib/actions/auth";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 
@@ -19,51 +18,6 @@ export default async function DashboardPage() {
 
   return (
     <div className="flex-1 flex flex-col">
-      {/* ── Top Nav ─────────────────────────── */}
-      <header className="h-14 bg-white border-b border-[#ebebeb] flex items-center justify-between px-6 sticky top-0 z-10">
-        <div className="flex items-center gap-6">
-          <div className="flex items-center gap-3">
-            <svg height="24" viewBox="0 0 75 65" fill="#171717">
-              <path d="M37.59.25l36.95 64H.64l36.95-64z"></path>
-            </svg>
-            <span className="text-ui font-semibold">ContentEngine</span>
-          </div>
-          <nav className="hidden sm:flex items-center gap-4 text-sm font-medium">
-            <Link
-              href="/dashboard"
-              className="text-[#171717] hover:text-[#171717]/80"
-            >
-              Dashboard
-            </Link>
-            <Link
-              href="/generate"
-              className="text-[#666666] hover:text-[#171717] transition-colors"
-            >
-              Generate
-            </Link>
-            <Link
-              href="/library"
-              className="text-[#666666] hover:text-[#171717] transition-colors"
-            >
-              Library
-            </Link>
-          </nav>
-        </div>
-
-        <div className="flex items-center gap-6">
-          <span className="text-label hidden sm:block">{user.email}</span>
-          <form action={signOutAction}>
-            <button
-              id="sign-out-btn"
-              type="submit"
-              className="text-sm font-medium text-[#4d4d4d] hover:text-[#171717] transition-colors"
-            >
-              Sign out
-            </button>
-          </form>
-        </div>
-      </header>
-
       {/* ── Main ────────────────────────────── */}
       <main className="flex-1 flex flex-col px-6 py-12 max-w-[1200px] w-full mx-auto gap-8">
         {/* Greeting */}

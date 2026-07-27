@@ -19,10 +19,18 @@ export async function takeScreenshot(
   let page: Page | null = null;
 
   try {
-    browser = await chromium.launch({
-      headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox'], // helpful for containers/CI
-    });
+    const browserlessUrl = process.env.BROWSERLESS_WS_URL;
+
+    if (browserlessUrl) {
+      // Production: connect to remote Browserless.io instance over CDP
+      browser = await chromium.connectOverCDP(browserlessUrl);
+    } else {
+      // Local / CI: launch a local Chromium instance
+      browser = await chromium.launch({
+        headless: true,
+        args: ['--no-sandbox', '--disable-setuid-sandbox'],
+      });
+    }
 
     page = await browser.newPage();
     await page.setViewportSize({ width, height });

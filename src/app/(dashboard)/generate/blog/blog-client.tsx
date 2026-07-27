@@ -3,9 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { ArrowLeft, RefreshCw, Sparkles } from 'lucide-react';
-import Link from 'next/link';
-import { signOutAction } from '@/lib/actions/auth';
+import { RefreshCw, Sparkles } from 'lucide-react';
 
 import InputTypeSelector from '@/components/generate/input-type-selector';
 import AngleSelector, { type BlogAngle } from '@/components/blog/angle-selector';
@@ -16,7 +14,7 @@ interface BlogClientProps {
   userEmail?: string | null;
 }
 
-export default function BlogClient({ userEmail }: BlogClientProps) {
+export default function BlogClient({}: BlogClientProps) {
   const router = useRouter();
 
   // 1. Form States
@@ -98,30 +96,6 @@ export default function BlogClient({ userEmail }: BlogClientProps) {
 
   return (
     <div className="flex-1 flex flex-col">
-      {/* ── Top Nav ─────────────────────────── */}
-      <header className="h-14 bg-white border-b border-[#ebebeb] flex items-center justify-between px-6 sticky top-0 z-10">
-        <div className="flex items-center gap-3">
-          <Link href="/generate" className="flex items-center gap-2 text-[#4d4d4d] hover:text-[#171717] transition-colors">
-            <ArrowLeft className="w-4 h-4" />
-            <span className="text-xs font-medium">Back to Repurpose</span>
-          </Link>
-          <span className="text-[#ebebeb]">|</span>
-          <span className="text-ui font-semibold -tracking-[0.5px]">Blog Expansion</span>
-        </div>
-
-        <div className="flex items-center gap-6">
-          {userEmail && <span className="text-label hidden sm:block">{userEmail}</span>}
-          <form action={signOutAction}>
-            <button
-              id="sign-out-btn"
-              type="submit"
-              className="text-sm font-medium text-[#4d4d4d] hover:text-[#171717] transition-colors"
-            >
-              Sign out
-            </button>
-          </form>
-        </div>
-      </header>
 
       {/* ── Main Content Area ───────────────── */}
       <main className="flex-1 max-w-[1200px] w-full mx-auto px-6 py-8 space-y-8">

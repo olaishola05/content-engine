@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { headers } from 'next/headers';
 import { streamObject } from 'ai';
-import { anthropic } from '@ai-sdk/anthropic';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import type { Prisma } from '@prisma/client';
@@ -9,6 +8,7 @@ import { auth } from '@/lib/auth';
 import { textGenRateLimit } from '@/lib/ratelimit';
 import { getSkillContent } from '@/lib/skills/loader';
 import { revalidateTag } from 'next/cache';
+import { resolveAnthropicModel } from '@/lib/ai-client';
 import {
   buildTextGenerationSystemPrompt,
   type InputType,
@@ -69,18 +69,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 3. Check Anthropic API Key
-    if (!process.env.ANTHROPIC_API_KEY) {
-      return NextResponse.json(
-        {
-          error: 'Anthropic API key is missing. Please contact administrator to set ANTHROPIC_API_KEY.',
-          code: 'MISSING_API_KEY',
-        },
-        { status: 400 }
-      );
-    }
-
-    // 4. Validate body parameters
+    // 3. Validate body parameters
     const json = await req.json();
     const validation = textGenerationRequestSchema.safeParse(json);
     if (!validation.success) {
@@ -92,7 +81,7 @@ export async function POST(req: NextRequest) {
 
     const { inputText, inputType, platforms, tone, direction } = validation.data;
 
-    // 5. Retrieve user's brand profile
+    // 4. Retrieve user's brand profile
     const brandProfile = await prisma.brandProfile.findUnique({
       where: { userId },
     });
@@ -103,6 +92,10 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
+
+    // 5. Resolve AI model (BYOK for testers, server key for others) - handles MISSING_API_KEY for non-BYOK
+    const { model: resolvedModel, error: modelError } = await resolveAnthropicModel(userId);
+    if (modelError) return modelError;
 
     // 6. Load marketing skills context
     const socialSkill = await getSkillContent('social');
@@ -131,9 +124,9 @@ ${socialSkill ? `### Social Media Optimisation Guidelines:\n${socialSkill.conten
       },
     });
 
-    // 8. Trigger streamObject using Anthropic Sonnet Latest
+    // 8. Trigger streamObject using resolved Anthropic model
     const result = await streamObject({
-      model: anthropic('claude-3-7-sonnet-latest'),
+      model: resolvedModel,
       schema: outputSchema,
       system: systemPromptText,
       prompt: `Please repurpose the following original content into the requested platforms and tone. Important: populate the generationId field with "${generation.id}" in your JSON response:\n\n${inputText}`,

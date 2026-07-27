@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { headers } from 'next/headers';
 import { streamObject } from 'ai';
-import { anthropic } from '@ai-sdk/anthropic';
 import { z } from 'zod';
+import { resolveAnthropicModel } from '@/lib/ai-client';
 import { prisma } from '@/lib/prisma';
 import type { Prisma } from '@prisma/client';
 import { auth } from '@/lib/auth';
@@ -64,18 +64,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 3. Check Anthropic API Key
-    if (!process.env.ANTHROPIC_API_KEY) {
-      return NextResponse.json(
-        {
-          error: 'Anthropic API key is missing. Please contact administrator to set ANTHROPIC_API_KEY.',
-          code: 'MISSING_API_KEY',
-        },
-        { status: 400 }
-      );
-    }
-
-    // 4. Validate body parameters
+    // 3. Validate body parameters
     const json = await req.json();
     const validation = regenerateRequestSchema.safeParse(json);
     if (!validation.success) {
@@ -111,7 +100,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 7. Load marketing skills context
+    // 7. Resolve AI model (BYOK for testers)
+    const { model: resolvedModel, error: modelError } = await resolveAnthropicModel(userId);
+    if (modelError) return modelError;
+
+    // 8. Load marketing skills context
     const socialSkill = await getSkillContent('social');
     const copywritingSkill = await getSkillContent('copywriting');
 
@@ -131,9 +124,9 @@ ${copywritingSkill ? `### Core Copywriting Principles:\n${copywritingSkill.conte
 ${socialSkill ? `### Social Media Optimisation Guidelines:\n${socialSkill.content}\n` : ''}
 `;
 
-    // 8. Trigger streamObject using Anthropic Sonnet Latest
+    // 9. Trigger streamObject using resolved model (BYOK or server default)
     const result = await streamObject({
-      model: anthropic('claude-3-7-sonnet-latest'),
+      model: resolvedModel,
       schema: outputSchema,
       system: systemPromptText,
       prompt: `Please repurpose the following original content into the requested platform and tone:\n\n${originalGeneration.inputText}`,

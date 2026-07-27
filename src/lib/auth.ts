@@ -17,7 +17,23 @@ export const auth = betterAuth({
   database: prismaAdapter(prisma, {
     provider: "postgresql",
   }),
-  
+
+  user: {
+    additionalFields: {
+      role: {
+        type: "string",
+        required: false,
+        defaultValue: "subscriber",
+        input: false,
+      },
+      encryptedAnthropicApiKey: {
+        type: "string",
+        required: false,
+        input: false,
+      },
+    },
+  },
+
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: true,
@@ -78,6 +94,18 @@ export const auth = betterAuth({
   databaseHooks: {
     user: {
       create: {
+        before: async (user) => {
+          const founderEmail = process.env.FOUNDER_EMAIL;
+          const isFounder = founderEmail && user.email.toLowerCase() === founderEmail.toLowerCase();
+          const isBetaMode = process.env.PRIVATE_BETA_MODE !== "false";
+          const role = isFounder ? "admin" : (isBetaMode ? "tester" : "subscriber");
+          return {
+            data: {
+              ...user,
+              role,
+            },
+          };
+        },
         after: async (user: { name: string; email: string }) => {
           // Send Welcome Email in background using next/server after()
           after(async () => {
