@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { headers } from 'next/headers';
 import { streamObject, generateObject } from 'ai';
-import { anthropic } from '@ai-sdk/anthropic';
 import { z } from 'zod';
+import { resolveAnthropicModel } from '@/lib/ai-client';
 import { prisma } from '@/lib/prisma';
 import type { Prisma } from '@prisma/client';
 import { auth } from '@/lib/auth';
@@ -77,16 +77,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 5. Check Anthropic API Key
-    if (!process.env.ANTHROPIC_API_KEY) {
-      return NextResponse.json(
-        {
-          error: 'Anthropic API key is missing. Please contact administrator to set ANTHROPIC_API_KEY.',
-          code: 'MISSING_API_KEY',
-        },
-        { status: 400 }
-      );
-    }
+    // 5. Resolve AI model (BYOK support for testers; MISSING_API_KEY handled inside resolver for others)
+    const { model: resolvedModel, error: modelError } = await resolveAnthropicModel(userId);
+    if (modelError) return modelError;
 
     // 6. Load marketing skills context
     const copywritingSkill = await getSkillContent('copywriting');
@@ -103,9 +96,9 @@ ${copywritingSkill ? `### Core Copywriting Principles:\n${copywritingSkill.conte
 ${aiSeoSkill ? `### AI Search Optimisation Guidelines:\n${aiSeoSkill.content}\n` : ''}
 `;
 
-    // 7. Trigger streamObject using Anthropic Sonnet Latest
+    // 7. Trigger streamObject using resolved model (BYOK or server default)
     const result = await streamObject({
-      model: anthropic('claude-3-7-sonnet-latest'),
+      model: resolvedModel,
       schema: articleOutputSchema,
       system: systemPromptText,
       prompt: `Generate the long-form blog post for the chosen angle.
@@ -119,7 +112,7 @@ Source Content:\n\n${generation.inputText}`,
           // Asynchronously extract content atoms (Step 2.1)
           const atomsPrompt = buildContentAtomsSystemPrompt(object.contentMarkdown);
           const { object: atoms } = await generateObject({
-            model: anthropic('claude-3-7-sonnet-latest'),
+            model: resolvedModel,
             schema: z.object({
               quotable: z.string(),
               statistic: z.string(),
@@ -138,7 +131,7 @@ Source Content:\n\n${generation.inputText}`,
               object.seoTitle
             );
             const { object: ytSeo } = await generateObject({
-              model: anthropic('claude-3-7-sonnet-latest'),
+              model: resolvedModel,
               schema: z.object({
                 titles: z.array(z.string()),
                 description: z.string(),

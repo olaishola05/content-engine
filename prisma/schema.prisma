@@ -17,9 +17,8 @@ model User {
   updatedAt     DateTime
   sessions      Session[]
   accounts      Account[]
-  
-  // Custom roles
   role          String    @default("subscriber") // "admin" | "tester" | "subscriber"
+  encryptedAnthropicApiKey String?
   
   brandProfile  BrandProfile?
   generations   Generation[]

@@ -20,12 +20,23 @@ export async function resolveOnboardingGate(): Promise<GateResult> {
 
   const { id: userId } = session.user;
 
-  const profile = await prisma.brandProfile.findUnique({
-    where: { userId },
-    select: { id: true, profileType: true },
-  });
+  const [profile, dbUser] = await Promise.all([
+    prisma.brandProfile.findUnique({
+      where: { userId },
+      select: { id: true, profileType: true },
+    }),
+    prisma.user.findUnique({
+      where: { id: userId },
+      select: { role: true, encryptedAnthropicApiKey: true },
+    }),
+  ]);
 
   if (profile && profile.profileType !== 'DRAFT') {
+    const isTester = dbUser?.role === 'tester';
+    const hasKey = !!dbUser?.encryptedAnthropicApiKey;
+    if (isTester && !hasKey) {
+      return { status: 'NEEDS_ONBOARDING', userId };
+    }
     return { status: 'PROFILE_EXISTS', userId };
   }
 

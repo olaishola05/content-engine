@@ -10,7 +10,7 @@ interface ImpactCardClientProps {
   userEmail?: string | null;
 }
 
-export default function ImpactCardClient({ userEmail }: ImpactCardClientProps) {
+export default function ImpactCardClient({}: ImpactCardClientProps) {
   const [inputText, setInputText] = useState('');
   const [statements, setStatements] = useState<string[]>([]);
   const [currentStatementIndex, setCurrentStatementIndex] = useState(0);
@@ -96,12 +96,6 @@ export default function ImpactCardClient({ userEmail }: ImpactCardClientProps) {
 
   return (
     <div className="flex-1 flex flex-col">
-      <header className="h-14 bg-white border-b border-[#ebebeb] flex items-center justify-between px-6">
-        <div className="flex items-center gap-3">
-          <span className="text-ui font-semibold">Impact Card</span>
-        </div>
-        {userEmail && <span className="text-label hidden sm:block">{userEmail}</span>}
-      </header>
 
       <main className="flex-1 max-w-[1200px] w-full mx-auto px-6 py-8 space-y-8">
         <div className="space-y-1">

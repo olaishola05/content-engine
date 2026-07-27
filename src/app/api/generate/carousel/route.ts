@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { headers } from 'next/headers';
 import { generateObject } from 'ai';
-import { anthropic } from '@ai-sdk/anthropic';
 import { z } from 'zod';
+import { resolveAnthropicModel } from '@/lib/ai-client';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth';
 import { visualExportRateLimit } from '@/lib/ratelimit';
@@ -57,21 +57,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 5. Check Anthropic API Key
-    if (!process.env.ANTHROPIC_API_KEY) {
-      return NextResponse.json(
-        {
-          error: 'Anthropic API key is missing. Please contact administrator to set ANTHROPIC_API_KEY.',
-          code: 'MISSING_API_KEY',
-        },
-        { status: 400 }
-      );
-    }
+    // 5. Resolve AI model (BYOK for testers)
+    const { model: resolvedModel, error: modelError } = await resolveAnthropicModel(userId);
+    if (modelError) return modelError;
 
     // 6. Trigger generateObject
     const systemPrompt = buildCarouselCopySystemPrompt(inputText, carouselType, brandProfile);
     const { object } = await generateObject({
-      model: anthropic('claude-3-7-sonnet-latest'),
+      model: resolvedModel,
       schema: carouselOutputSchema,
       system: systemPrompt,
       prompt: `Generate the ${carouselType} carousel slide copy for this source content:\n\n${inputText}`,

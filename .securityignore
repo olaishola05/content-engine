@@ -2,3 +2,4 @@
 # Add relative paths from the repository root (one path per line)
 
 prisma/schema.prisma
+prisma/migrations/

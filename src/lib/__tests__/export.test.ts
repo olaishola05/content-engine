@@ -7,7 +7,18 @@ vi.mock('playwright', () => ({
       newPage: vi.fn().mockResolvedValue({
         setViewportSize: vi.fn(),
         setContent: vi.fn(),
+        goto: vi.fn(),
         screenshot: vi.fn().mockResolvedValue(Buffer.from('fake-png-data-for-1080x1350')),
+        close: vi.fn().mockResolvedValue(undefined),
+      }),
+      close: vi.fn().mockResolvedValue(undefined),
+    }),
+    connectOverCDP: vi.fn().mockResolvedValue({
+      newPage: vi.fn().mockResolvedValue({
+        setViewportSize: vi.fn(),
+        setContent: vi.fn(),
+        goto: vi.fn(),
+        screenshot: vi.fn().mockResolvedValue(Buffer.from('fake-png-browserless')),
         close: vi.fn().mockResolvedValue(undefined),
       }),
       close: vi.fn().mockResolvedValue(undefined),
@@ -29,6 +40,7 @@ import { uploadFileToR2 } from '../r2';
 describe('Shared Export Utilities', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    delete process.env.BROWSERLESS_WS_URL;
     process.env.CLOUDFLARE_R2_BUCKET_NAME = 'test-bucket';
     process.env.CLOUDFLARE_R2_ENDPOINT = 'https://mock-endpoint.r2.cloudflarestorage.com';
     process.env.CLOUDFLARE_R2_ACCESS_KEY_ID = 'mock-key';
@@ -61,6 +73,27 @@ describe('Shared Export Utilities', () => {
       // Verify playwright was used (mocked)
       const { chromium } = await import('playwright');
       expect(chromium.launch).toHaveBeenCalled();
+    });
+
+    it('uses chromium.connectOverCDP when BROWSERLESS_WS_URL is set', async () => {
+      process.env.BROWSERLESS_WS_URL = 'wss://chrome.browserless.io?token=test';
+
+      const html = '<html>browserless content</html>';
+      const buffer = await takeScreenshot(html, { width: 1080, height: 1080 });
+
+      const { chromium } = await import('playwright');
+      expect(chromium.connectOverCDP).toHaveBeenCalledWith('wss://chrome.browserless.io?token=test');
+      expect(chromium.launch).not.toHaveBeenCalled();
+      expect(buffer).toBeInstanceOf(Buffer);
+    });
+
+    it('falls back to chromium.launch when BROWSERLESS_WS_URL is not set', async () => {
+      const html = '<html>local content</html>';
+      await takeScreenshot(html, { width: 800, height: 600 });
+
+      const { chromium } = await import('playwright');
+      expect(chromium.launch).toHaveBeenCalled();
+      expect(chromium.connectOverCDP).not.toHaveBeenCalled();
     });
   });
 
